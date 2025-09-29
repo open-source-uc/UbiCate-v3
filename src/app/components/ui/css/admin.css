@@ -1,0 +1,33 @@
+.deleteButton {
+    color: #F24F4F
+}
+
+.deleteButton:hover {
+    color: #c65858
+}
+
+.mobileManageUserTitle {
+    display: none;
+}
+
+
+@media (max-width: 700px) {
+    .userCardTitle {
+        font-size: 1rem;
+    }
+    .userCard {
+        grid-template-columns: 1fr 70px !important;
+    } 
+    .userCardImg {
+        display: none !important;
+    }
+    .mobileManageUserTitle {
+        display: block;
+        padding-bottom: 10px;
+    }
+
+    .desktopManageUserTitle {
+        display: none;
+    }
+
+}

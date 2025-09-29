@@ -1,0 +1,149 @@
+/* ===== Compartido (mobile + desktop) ===== */
+
+.mobile-avatar-dropdown {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  padding: 16px 20px;
+  min-width: 220px;
+  text-align: center;
+}
+
+.uid-chip {
+  background: #fff3c4;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+  letter-spacing: 0.5px;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin-bottom: 12px;
+}
+
+.uid-sep {
+  margin: 8px 0 12px;
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.uid-logout {
+  background: transparent;
+  border: none;
+  color: #1d4ed8;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 24px;
+  letter-spacing: 0.5px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.uc-header {
+  background-color: #007BFF;
+}
+
+/* Seguridad extra: headers no recortan nada */
+.uc-mobile-topstack,
+.uc-mobile-topbar,
+.uc-mobile-subheader {
+  overflow: visible !important;
+}
+
+.admin-header,
+.admin-header .uc-navbar,
+.admin-header .container-fluid,
+.admin-header .row {
+  overflow: visible !important;
+}
+
+/* Forzar altura pareja */
+.uc-navbar .row {
+  min-height: 72px;
+}
+
+/* ===== SOLO Desktop (≥ xl) ===== */
+@media (min-width: 1200px) {
+  .admin-header .container-fluid > .row {
+    justify-content: space-between !important;
+  }
+
+  /* Eliminar padding/margen extra en el header y navbar para que el fondo azul solo ocupe el alto del row */
+  .uc-header,
+  .uc-navbar,
+  .uc-navbar .container-fluid {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    height: auto !important;
+  }
+  .uc-navbar .container-fluid {
+    min-height: 0 !important;
+  }
+  .uc-navbar .row {
+    min-height: 72px;
+  }
+
+  .admin-header .admin-header-left {
+    display: flex;
+    align-items: center;
+    column-gap: 1.5rem;
+  }
+
+  .admin-header .admin-header-title {
+    margin-left: 0 !important;
+  }
+
+  .admin-header .admin-header-left > a + a {
+    margin-left: 1.5rem;
+  }
+
+  .admin-header .uc-navbar-system {
+    border-top: none !important;
+    box-shadow: none !important;
+    background-image: none !important;
+  }
+
+  .admin-header .uc-navbar-system::before,
+  .admin-header .uc-navbar-system::after {
+    content: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: none !important;
+  }
+
+  /* Espacio extra en header público */
+  .uc-header .admin-header-left > a + a {
+    margin-left: 1.5rem;
+  }
+}
+
+/* ===== SOLO Mobile (≤ xl) ===== */
+@media (max-width: 1199.98px) {
+  .admin-header .uc-navbar.uc-navbar-system {
+    border-top: 0 !important;
+    padding: 0 !important;
+  }
+
+  .admin-header .mobile-header-fix .uc-navbar_mobile-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .admin-header .mobile-header-fix .uc-navbar_mobile-logo,
+  .admin-header .mobile-header-fix .uc-navbar_mobile-button {
+    background: transparent !important;
+  }
+
+  /* Espacio entre logo UC y texto en mobile */
+  .uc-mobile-subheader > a:first-of-type + a {
+    margin-left: 1.5rem;
+  }
+}
