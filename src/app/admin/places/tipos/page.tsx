@@ -139,20 +139,15 @@ const TiposTable: React.FC = () => {
 
     return (
         <div className="container">
-            <h3 className="mobileManageUserTitle">Gestionar Tipos de Lugar</h3>
+            <h3 className="mobileManageUserTitle">Gestión de Tipos de Lugar</h3>
 
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    paddingBottom: "20px",
-                    alignItems: "center",
-                }}
-            >
-                <h3 className="desktopManageUserTitle">Gestionar Tipos de Lugar</h3>
-                <a href="/admin/places/tipos/add" className="uc-btn btn-secondary">
-                    <i className="uc-icon">add</i>
-                </a>
+            <div style={{ paddingBottom: "20px" }}>
+                <h3 className="desktopManageUserTitle">Gestión de Tipos de Lugar</h3>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
+                    <a href="/admin/places/tipos/add" className="uc-btn btn-secondary">
+                        <i className="uc-icon">add</i>
+                    </a>
+                </div>
             </div>
 
             <div className="filters-column" style={{ marginBottom: "2rem" }}>
