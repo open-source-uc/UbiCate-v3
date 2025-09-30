@@ -133,18 +133,11 @@ export default function Page() {
     </div>
   </>
 )}
-      <h3 className="mobileManageUserTitle">Gestionar Usuarios</h3>
+      <h3 className="mobileManageUserTitle">Gestión de Usuarios</h3>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          paddingBottom: "20px",
-          alignItems: "center",
-        }}
-      >
-        <h3 className="desktopManageUserTitle">Gestionar Usuarios</h3>
-        <div style={{ display: "flex", alignItems: "center" }}>
+      <div style={{ paddingBottom: "20px" }}>
+        <h3 className="desktopManageUserTitle">Gestión de Usuarios</h3>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
           <div style={{ position: "relative" }}>
             <div
               className="uc-btn btn-secondary"

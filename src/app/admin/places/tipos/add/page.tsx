@@ -144,9 +144,19 @@ const AddTipoPage: React.FC = () => {
         </div>
       </div>
 
-      <button className="uc-btn btn-featured" onClick={handleAddTipo}>
-        Añadir Tipo
-      </button>
+      <div style={{ display: "flex", gap: "1rem", marginTop: "2rem" }}>
+        <button className="uc-btn btn-featured" onClick={handleAddTipo}>
+          Añadir Tipo
+        </button>
+        <button
+          type="button"
+          className="uc-btn btn-secondary"
+          style={{ backgroundColor: "#F24F4F", color: "white" }}
+          onClick={() => router.push("/admin/places/tipos")}
+        >
+          Cancelar
+        </button>
+      </div>
     </div>
   );
 };

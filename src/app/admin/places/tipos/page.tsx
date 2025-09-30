@@ -10,6 +10,8 @@ type Tipo = {
     nombre_tipo_lugar: string;
     icono: string;
     color_icono: string;
+    isEmpty?: boolean;
+    key?: string;
 };
 
 const TiposTable: React.FC = () => {
@@ -29,6 +31,11 @@ const TiposTable: React.FC = () => {
     useEffect(() => {
         fetchTipos();
     }, []);
+
+    // Reset to first page when search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search]);
 
     const fetchTipos = async () => {
         setLoading(true);
@@ -106,22 +113,49 @@ const TiposTable: React.FC = () => {
         tipo.nombre_tipo_lugar?.toLowerCase().includes(search.trim().toLowerCase() || "")
     );
 
+    // Calculate total pages based on filtered data
     const totalPages = Math.ceil(filteredTipos.length / pageSize);
-    const paginatedTipos = filteredTipos.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    
+    // Get paginated filtered data
+    const paginatedFilteredTipos = filteredTipos.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    
+    // Create empty rows to fill the page
+    const emptyRowsNeeded = Math.max(0, pageSize - paginatedFilteredTipos.length);
+    const emptyRows = Array.from({ length: emptyRowsNeeded }, (_, index) => ({
+        id_tipo_lugar: 0,
+        nombre_tipo_lugar: "",
+        icono: "",
+        color_icono: "",
+        isEmpty: true,
+        key: `empty-${currentPage}-${index}`
+    }));
 
-    console.log("Filtered Tipos:", paginatedTipos); // Debugging line to check filteredTipos content
+    // Combine filtered data with empty rows
+    const displayRows = [...paginatedFilteredTipos, ...emptyRows];
+
+    console.log("Display Rows:", displayRows); // Debugging line to check display rows
 
     if (loading) return <div>Cargando...</div>;
 
     return (
         <div className="container">
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+            <h3 className="mobileManageUserTitle">Gestionar Tipos de Lugar</h3>
+
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    paddingBottom: "20px",
+                    alignItems: "center",
+                }}
+            >
+                <h3 className="desktopManageUserTitle">Gestionar Tipos de Lugar</h3>
                 <a href="/admin/places/tipos/add" className="uc-btn btn-secondary">
                     <i className="uc-icon">add</i>
                 </a>
             </div>
 
-            <div className="filters-column">
+            <div className="filters-column" style={{ marginBottom: "2rem" }}>
                     <div className="uc-form-group" style={{ maxWidth: "360px", margin: "0 auto" }}>
                         <label className="uc-label-help" htmlFor="ucsearch">
                             Buscar tipo de lugar
@@ -140,41 +174,50 @@ const TiposTable: React.FC = () => {
                     </div>
             </div>
 
-            <div className="table-column">
-                <table className="uc-table results-table">
-                    <caption>Tipos de Lugar</caption>
+            <div className="results-table">
+                <table className="uc-table" style={{ width: "100%", marginBottom: "24px" }}>
                     <thead>
                         <tr>
-                            <th scope="col" style={{ width: "120px" }}>ID</th>
-                            <th scope="col">Nombre</th>
-                            <th scope="col">Ícono</th>
-                            <th scope="col">Color</th>
-                            <th scope="col" style={{ width: "150px", textAlign: "center" }}>Acciones</th>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Ícono</th>
+                            <th>Color</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedTipos.map((tipo, index) => (
-                            <tr key={tipo.id_tipo_lugar || `empty-${index}`} className={tipo.id_tipo_lugar % 2 === 0 ? "active" : ""}>
-                                <td>{tipo.id_tipo_lugar || ""}</td>
-                                <td>{tipo.nombre_tipo_lugar || (
-                                    <span style={{ color: "transparent" }}>Texto invisible</span>
-                                )}</td>
+                        {displayRows.map((tipo, index) => (
+                            <tr key={tipo.key || tipo.id_tipo_lugar || `row-${index}`} className={index % 2 === 0 ? "active" : ""}>
+                                <td>{tipo.isEmpty ? "" : tipo.id_tipo_lugar}</td>
                                 <td>
-                                    <i className="uc-icon" style={{ color: tipo.color_icono }}>{tipo.icono}</i>
+                                    {tipo.isEmpty ? (
+                                        <span style={{ color: "transparent", userSelect: "none" }}>Texto invisible</span>
+                                    ) : (
+                                        tipo.nombre_tipo_lugar || (
+                                            <span style={{ color: "transparent", userSelect: "none" }}>Texto invisible</span>
+                                        )
+                                    )}
                                 </td>
                                 <td>
-                                    <span
-                                        style={{
-                                            display: "inline-block",
-                                            width: "20px",
-                                            height: "20px",
-                                            backgroundColor: tipo.color_icono,
-                                            borderRadius: "50%",
-                                        }}
-                                    ></span>
+                                    {!tipo.isEmpty && tipo.icono && (
+                                        <i className="uc-icon" style={{ color: tipo.color_icono }}>{tipo.icono}</i>
+                                    )}
                                 </td>
                                 <td>
-                                    {tipo.id_tipo_lugar && (
+                                    {!tipo.isEmpty && tipo.color_icono && (
+                                        <span
+                                            style={{
+                                                display: "inline-block",
+                                                width: "20px",
+                                                height: "20px",
+                                                backgroundColor: tipo.color_icono,
+                                                borderRadius: "50%",
+                                            }}
+                                        ></span>
+                                    )}
+                                </td>
+                                <td>
+                                    {!tipo.isEmpty && tipo.id_tipo_lugar && (
                                         <div style={{ display: 'inline-flex', gap: '8px' }}>
                                             <button
                                                 onClick={() => {
@@ -202,6 +245,7 @@ const TiposTable: React.FC = () => {
                 </table>
             </div>
 
+            {/* UC Pagination */}
             {totalPages > 1 && (
                 <nav className="uc-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '24px 0' }}>
                     <button
@@ -213,17 +257,30 @@ const TiposTable: React.FC = () => {
                         <i className="uc-icon">keyboard_arrow_left</i>
                     </button>
                     <ul className="uc-pagination_pages" style={{ display: 'flex', alignItems: 'center', gap: '4px', listStyle: 'none', margin: 0, padding: 0 }}>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                            <li key={page} className={`page-item${currentPage === page ? ' active' : ''}`}>
-                                <button
-                                    className="page-link"
-                                    onClick={() => setCurrentPage(page)}
-                                    style={{ border: 'none', background: 'none', cursor: 'pointer' }}
-                                >
-                                    {page}
-                                </button>
+                        {/* First page */}
+                        <li className={`page-item${currentPage === 1 ? ' active' : ''}`}>
+                            <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(1); }}>1</a>
+                        </li>
+                        {/* Show pages around current, with ellipsis if needed */}
+                        {currentPage > 3 && totalPages > 5 && (
+                            <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
+                        )}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(page => page !== 1 && page !== totalPages && Math.abs(page - currentPage) <= 1)
+                            .map((page, idx) => (
+                                <li key={page + '-' + idx} className={`page-item${currentPage === page ? ' active' : ''}`}>
+                                    <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(page); }}>{page}</a>
+                                </li>
+                            ))}
+                        {currentPage < totalPages - 2 && totalPages > 5 && (
+                            <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
+                        )}
+                        {/* Last page */}
+                        {totalPages > 1 && (
+                            <li className={`page-item${currentPage === totalPages ? ' active' : ''}`}>
+                                <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(totalPages); }}>{totalPages}</a>
                             </li>
-                        ))}
+                        )}
                     </ul>
                     <button
                         className="uc-pagination_next ml-12"
@@ -319,35 +376,32 @@ const TiposTable: React.FC = () => {
                     flex-direction: column;
                     align-items: stretch;
                     justify-content: flex-start;
-                    height: 100vh;
-                    padding: 16px; /* Add padding to the container */
-                    background-color: #f9f9f9;
+                    padding: 16px;
                 }
 
                 .results-table {
-                    width: calc(100% - 32px); /* Add horizontal spacing */
-                    height: calc(100% - 32px); /* Add vertical spacing */
-                    margin: 16px; /* Ensure spacing around the table */
-                    border-collapse: collapse;
-                    background: #fff;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    width: 100%;
+                    display: block;
                 }
 
                 .results-table tbody tr {
-                    height: 60px; /* Fija la altura de cada fila */
+                    height: 60px;
                 }
 
                 .results-table tbody tr td {
-                    vertical-align: middle; /* Asegura que el contenido esté centrado verticalmente */
+                    vertical-align: middle;
                 }
 
-                .uc-pagination {
-                    margin-top: auto;
-                    padding: 8px 0;
+                table {
                     width: 100%;
-                    display: flex;
-                    justify-content: center;
-                    background-color: #f9f9f9;
+                    border-collapse: collapse;
+                    margin-bottom: 24px;
+                }
+
+                th, td {
+                    padding: 0.5rem;
+                    text-align: left;
+                    border: 1px solid #ccc;
                 }
 
                 @media (max-width: 768px) {

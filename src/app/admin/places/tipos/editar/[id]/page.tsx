@@ -16,6 +16,8 @@ const EditarTipoPage: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -64,8 +66,13 @@ const EditarTipoPage: React.FC = () => {
     setTipo((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmSave = async () => {
+    setSubmitting(true);
     try {
       const response = await fetch(`/api/places/editTipo/${id}`, {
         method: "PUT",
@@ -78,6 +85,9 @@ const EditarTipoPage: React.FC = () => {
     } catch (error) {
       console.error("Error durante submit:", error);
       setError("Error al guardar los cambios");
+      setShowConfirmModal(false);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -85,11 +95,11 @@ const EditarTipoPage: React.FC = () => {
   if (error) return <div>{error}</div>;
 
   return (
-    <div style={{ maxWidth: 600, margin: "2rem auto" }}>
-      <div className="form-container">
-        <h4>Editar Tipo</h4>
+    <div style={{ maxWidth: 600, margin: "2rem auto", padding: "0 1.5rem" }}>
+      <div className="form-container" style={{ padding: "2rem" }}>
+        <h4 style={{ marginBottom: "2rem" }}>Editar Tipo</h4>
         <form onSubmit={handleSubmit}>
-          <div className="uc-form-group">
+          <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
             <label htmlFor="nombre_tipo_lugar" className="uc-label-help">
               <span className="uc-label-text">Nombre del tipo</span>
               <span className="uc-tooltip" data-tippy-content="Es el nombre del tipo de lugar">
@@ -108,7 +118,7 @@ const EditarTipoPage: React.FC = () => {
             />
           </div>
 
-          <div className="uc-form-group">
+          <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
             <label htmlFor="icono" className="uc-label-help">
               <span className="uc-label-text">Ícono</span>
               <span className="uc-tooltip" data-tippy-content="Es el ícono que representa el tipo de lugar">
@@ -132,7 +142,7 @@ const EditarTipoPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="uc-form-group">
+          <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
             <label htmlFor="color_icono" className="uc-label-help">
               <span className="uc-label-text">Color</span>
               <span className="uc-tooltip" data-tippy-content="Seleccione un color para el ícono">
@@ -168,9 +178,9 @@ const EditarTipoPage: React.FC = () => {
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "1rem", marginTop: 24 }}>
-            <button type="submit" className="uc-btn btn-featured">
-              Guardar
+          <div style={{ display: "flex", gap: "1rem", marginTop: "3rem" }}>
+            <button type="submit" className="uc-btn btn-featured" disabled={submitting}>
+              {submitting ? "Guardando..." : "Guardar"}
             </button>
             <button
               type="button"
@@ -183,6 +193,52 @@ const EditarTipoPage: React.FC = () => {
           </div>
         </form>
       </div>
+
+      {/* Modal de confirmación estilo SuggestStep */}
+      {showConfirmModal && (
+        <div className="uc-modal-overlay" role="dialog" aria-modal="true">
+          <div style={{ width: "90%", maxWidth: 520 }}>
+            <div className="uc-message warning mb-32">
+              <a
+                href="#"
+                className="uc-message_close-button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowConfirmModal(false);
+                }}
+              >
+                <i className="uc-icon">close</i>
+              </a>
+              <div className="uc-message_body">
+                <h2 className="mb-24">
+                  <i className="uc-icon warning-icon">help</i> Confirmar cambios
+                </h2>
+                <p className="no-margin">¿Estás seguro de que deseas guardar los cambios realizados en este tipo de lugar?</p>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginTop: 24 }}>
+                  <a 
+                    href="#" 
+                    className="uc-btn btn-secondary text-center" 
+                    style={{ backgroundColor: '#00AA00', color: 'white' }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!submitting) handleConfirmSave();
+                    }}
+                  >
+                    Sí, guardar cambios
+                  </a>
+                  <button 
+                    className="uc-btn btn-secondary" 
+                    onClick={() => setShowConfirmModal(false)}
+                    disabled={submitting}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
