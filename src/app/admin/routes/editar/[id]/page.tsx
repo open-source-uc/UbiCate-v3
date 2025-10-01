@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { RouteWithGeo } from "@/app/types/routeType";
 import { Place } from "@/app/types/placeType";
@@ -129,10 +129,7 @@ export default function EditarRutaPage() {
         updatedPlaces = [...prev, placeId];
       }
 
-      // Update the GeoJSON for the map
-      const updatedAssociatedPlaces = allPlaces.filter(place => updatedPlaces.includes(place.id_lugar));
-      const updatedGeojson = enrichGeojsonFeatures(route, updatedAssociatedPlaces);
-      setEnrichedGeojsonState(updatedGeojson);
+      // The enrichedGeojsonState will be automatically updated via useMemo when selectedPlaces changes
 
       return updatedPlaces;
     });
@@ -176,8 +173,39 @@ export default function EditarRutaPage() {
     }
   };
 
-  // Filter places to only include those associated with the route
-  const associatedPlaces = allPlaces.filter(place => route?.placeIds?.includes(place.id_lugar));
+
+
+  // Filter places to only include those currently selected - using useMemo to prevent recalculation
+  const associatedPlaces = useMemo(() => {
+    return allPlaces.filter(place => selectedPlaces.includes(place.id_lugar));
+  }, [allPlaces, selectedPlaces]);
+
+  // Assign color and icon dynamically using MapUtils - using useMemo to prevent mutation in render
+  const enrichedRoute = useMemo(() => {
+    if (!route) return null;
+    
+    const routeWithColors = {
+      ...route,
+      color: MapUtils.routeIdToColor(route.id_ruta.toString()),
+      icon: MapUtils.routeIdToIcon(route.id_ruta)
+    };
+
+    // Apply color to the route's GeoJSON features without mutating original
+    if (routeWithColors.featureCollection) {
+      routeWithColors.featureCollection = {
+        ...routeWithColors.featureCollection,
+        features: routeWithColors.featureCollection.features.map((feature: Feature) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            stroke: routeWithColors.color,
+          },
+        }))
+      };
+    }
+
+    return routeWithColors;
+  }, [route]);
 
   const enrichGeojsonFeatures = (route: RouteWithGeo | null, places: Place[]) => {
     const placesGeojsonRaw = places.map((place: Place) => (place as any).featureCollection || place.geojson).filter(Boolean);
@@ -202,18 +230,6 @@ export default function EditarRutaPage() {
       };
     });
 
-    if (route?.featureCollection) {
-      route.featureCollection.features = route.featureCollection.features.map((feature: Feature) => {
-        return {
-          ...feature,
-          properties: {
-            ...feature.properties,
-            stroke: route.color,
-          },
-        };
-      });
-    }
-
     if (!route?.featureCollection) {
       return { routeGeojson: null, placesGeojson };
     }
@@ -221,27 +237,10 @@ export default function EditarRutaPage() {
     return { routeGeojson: route.featureCollection, placesGeojson };
   };
 
-  const enrichedGeojson = enrichGeojsonFeatures(route, associatedPlaces);
-  const [enrichedGeojsonState, setEnrichedGeojsonState] = useState(enrichedGeojson);
-
-  // Assign color and icon dynamically using MapUtils
-  if (route) {
-    route.color = MapUtils.routeIdToColor(route.id_ruta.toString());
-    route.icon = MapUtils.routeIdToIcon(route.id_ruta);
-
-    // Apply color to the route's GeoJSON features
-    if (route.featureCollection) {
-      route.featureCollection.features = route.featureCollection.features.map((feature: Feature) => {
-        return {
-          ...feature,
-          properties: {
-            ...feature.properties,
-            stroke: route.color, // Add stroke color for the route line
-          },
-        };
-      });
-    }
-  }
+  // Calculate enriched geojson using useMemo to prevent unnecessary recalculations
+  const enrichedGeojsonState = useMemo(() => {
+    return enrichGeojsonFeatures(enrichedRoute, associatedPlaces);
+  }, [enrichedRoute, associatedPlaces]);
 
   if (loading) return <div>Cargando datos de la ruta...</div>;
   if (error) return <div style={{ color: "red" }}>{error}</div>;
