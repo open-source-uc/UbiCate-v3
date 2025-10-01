@@ -4,6 +4,7 @@ import tippy, { Instance } from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import AdminPageContainer from "../../../components/ui/admin/AdminPageContainer";
 
 type Tipo = {
     id_tipo_lugar: number;
@@ -14,11 +15,7 @@ type Tipo = {
     key?: string;
 };
 
-const PageTitle: React.FC<{ title: string }> = ({ title }) => (
-  <div style={{ marginBottom: "2rem", textAlign: "left" }}>
-    <h1 style={{ fontSize: "2rem", color: "#0176DE", margin: 0 }}>{title}</h1>
-  </div>
-);
+
 
 const TiposTable: React.FC = () => {
     const [tipos, setTipos] = useState<Tipo[]>([]);
@@ -143,14 +140,18 @@ const TiposTable: React.FC = () => {
 
     if (loading) return <div>Cargando...</div>;
 
+    const actionButton = (
+        <a href="/admin/places/tipos/add" className="uc-btn btn-secondary">
+            <span style={{ paddingRight: "10px", whiteSpace: "nowrap" }}>
+                Agregar Tipo de Lugar
+            </span>
+            <i className="uc-icon">add</i>
+        </a>
+    );
+
     return (
-        <div className="container" style={{ padding: "24px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                <PageTitle title="Gestión de Tipos de Lugar" />
-                <a href="/admin/places/tipos/add" className="uc-btn btn-secondary" style={{ marginLeft: "auto" }}>
-                    Agregar Tipo de Lugar
-                </a>
-            </div>
+        <AdminPageContainer title="Gestión de Tipos de Lugar" actionButton={actionButton}>
+            <div className="container">
 
             <div className="filters-column" style={{ marginBottom: "2rem" }}>
                     <div className="uc-form-group" style={{ maxWidth: "360px", margin: "0 auto" }}>
@@ -409,8 +410,12 @@ const TiposTable: React.FC = () => {
                     }
                 }
             `}</style>
-        </div>
+            </div>
+        </AdminPageContainer>
     );
 };
 
-export default TiposTable;
+// Page wrapper component
+export default function Page() {
+    return <TiposTable />;
+}

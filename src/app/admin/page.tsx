@@ -1,12 +1,7 @@
 'use client'
 
 import { useAuth } from './auth-provider'
-
-const PageTitle: React.FC<{ title: string }> = ({ title }) => (
-  <div style={{ marginBottom: "2rem", textAlign: "left" }}>
-    <h1 style={{ fontSize: "2rem", color: "#0176DE", margin: 0 }}>{title}</h1>
-  </div>
-);
+import AdminPageContainer from '../components/ui/admin/AdminPageContainer'
 
 export default function Page() {
   const { state } = useAuth()
@@ -34,26 +29,24 @@ export default function Page() {
   const { attributes } = state.authUser
   console.log(`Acceso autorizado: usuario ${attributes.uid}`)
   return (
-    <div
-      style={{
+    <AdminPageContainer title="Panel de Administración">
+      <div style={{
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
         alignItems: 'center',
-        padding: '1rem',
-      }}
-      className="w-full"
-    >
-      <PageTitle title="Panel de Administración" />
-
-      <div>
-        <p>
-          Bienvenido, <strong>{attributes.givenName} {attributes.apellidos}</strong>
-        </p>
-        <p>UID: {attributes.uid}</p>
-        <p>Apellidos: {attributes.apellidos}</p>
-        <p>Nombre: {attributes.givenName}</p>
+        justifyContent: 'center',
+        minHeight: '300px',
+        textAlign: 'center'
+      }}>
+        <div>
+          <p>
+            Bienvenido, <strong>{attributes.givenName} {attributes.apellidos}</strong>
+          </p>
+          <p>UID: {attributes.uid}</p>
+          <p>Apellidos: {attributes.apellidos}</p>
+          <p>Nombre: {attributes.givenName}</p>
+        </div>
       </div>
-    </div>
+    </AdminPageContainer>
   )
 }

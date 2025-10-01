@@ -16,11 +16,7 @@ type Ruta = {
     key?: string;
 };
 
-const PageTitle: React.FC<{ title: string }> = ({ title }) => (
-  <div style={{ marginBottom: "2rem", textAlign: "left" }}>
-    <h1 style={{ fontSize: "2rem", color: "#0176DE", margin: 0 }}>{title}</h1>
-  </div>
-);
+
 
 const RoutesTable: React.FC = () => {
     const [rutas, setRutas] = useState<Ruta[]>([]);
@@ -133,19 +129,6 @@ const RoutesTable: React.FC = () => {
 
     return (
         <div className="container">
-            <PageTitle title="Gestión de Rutas" />
-
-            <div style={{ paddingBottom: "20px" }}>
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
-                    
-                    <a href="/admin/routes/add" className="uc-btn btn-secondary">
-                    <span style={{ paddingRight: "10px", whiteSpace: "nowrap" }}>
-                        Agregar Ruta
-                    </span>
-                        <i className="uc-icon">add</i>
-                    </a>
-                </div>
-            </div>
 
             <div className="filters-column" style={{ marginBottom: "2rem" }}>
                 <div className="uc-form-group" style={{ maxWidth: "360px", margin: "0 auto" }}>
@@ -410,4 +393,23 @@ const RoutesTable: React.FC = () => {
     );
 };
 
-export default RoutesTable;
+// Wrapper component for the page
+import AdminPageContainer from "../../components/ui/admin/AdminPageContainer";
+
+export default function Page() {
+  return (
+    <AdminPageContainer 
+      title="Gestión de Rutas" 
+      actionButton={
+        <a href="/admin/routes/add" className="uc-btn btn-secondary">
+          <span style={{ paddingRight: "10px", whiteSpace: "nowrap" }}>
+            Agregar Ruta
+          </span>
+          <i className="uc-icon">add</i>
+        </a>
+      }
+    >
+      <RoutesTable />
+    </AdminPageContainer>
+  );
+}
