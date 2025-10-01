@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import tippy, { Instance } from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { PlaceName } from "@/app/types/placeNameType";
+import AdminPageContainer from "../../../../components/ui/admin/AdminPageContainer";
 
 const AddTipoPage: React.FC = () => {
   const [newTipo, setNewTipo] = useState({ nombre: "", icono: "", color: "" });
@@ -66,8 +67,8 @@ const AddTipoPage: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ maxWidth: 600, margin: "2rem auto" }}>
-      <h1 style={{ marginBottom: "1.5rem" }}>Añadir Tipo de Lugar</h1>
+    <AdminPageContainer title="Añadir Tipo de Lugar">
+      <div style={{ maxWidth: 600, margin: "0 auto" }}>
       {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
       <div className="uc-form-group" style={{ marginBottom: "1rem" }}>
         <label htmlFor="newTipo" className="uc-label-help">
@@ -182,7 +183,8 @@ const AddTipoPage: React.FC = () => {
           Cancelar
         </button>
       </div>
-    </div>
+      </div>
+    </AdminPageContainer>
   );
 };
 

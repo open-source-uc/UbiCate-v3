@@ -1,6 +1,9 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import AdminPageContainer from "../../../../../components/ui/admin/AdminPageContainer";
+import tippy, { Instance } from "tippy.js";
+import "tippy.js/dist/tippy.css";
 
 const EditarTipoPage: React.FC = () => {
   const router = useRouter();
@@ -36,6 +39,29 @@ const EditarTipoPage: React.FC = () => {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (loading) return;
+
+    const isTouch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
+    const trigger = isTouch ? "click" : "mouseenter focus";
+
+    const instances: Instance[] = tippy(".uc-tooltip", {
+      content: (ref) => ref.getAttribute("data-tippy-content") || "",
+      theme: "uc",
+      trigger,
+      placement: "top",
+      arrow: true,
+      hideOnClick: true,
+      touch: true,
+      appendTo: () => document.body,
+      zIndex: 2147483647,
+      interactive: false,
+      delay: [50, 50],
+    });
+
+    return () => instances.forEach((i) => i.destroy());
+  }, [loading]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setTipo((prev) => ({ ...prev, [name]: value }));
@@ -70,99 +96,111 @@ const EditarTipoPage: React.FC = () => {
   if (error) return <div>{error}</div>;
 
   return (
-    <div style={{ maxWidth: 600, margin: "2rem auto", padding: "0 1.5rem" }}>
-      <div className="form-container" style={{ padding: "2rem" }}>
-        <h4 style={{ marginBottom: "2rem" }}>Editar Tipo de Lugar</h4>
-        <form onSubmit={handleSubmit}>
-          <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
-            <label htmlFor="nombre_tipo_lugar" className="uc-label-help">
-              <span className="uc-label-text">Nombre del tipo</span>
-            </label>
-            <input
-              id="nombre_tipo_lugar"
-              name="nombre_tipo_lugar"
-              type="text"
-              className="uc-input-style"
-              value={tipo.nombre_tipo_lugar}
-              onChange={handleChange}
-              required
-              placeholder="Ejemplo: Biblioteca"
-            />
-          </div>
-
-          <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
-            <label htmlFor="icono" className="uc-label-help">
-              <span className="uc-label-text">Ícono</span>
-            </label>
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+    <>
+      <AdminPageContainer title="Editar Tipo de Lugar">
+        <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+          <div className="form-container" style={{ maxWidth: 600, width: "100%" }}>
+          <form onSubmit={handleSubmit}>
+            <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
+              <label className="uc-label-help" htmlFor="nombre_tipo_lugar">
+                Nombre del tipo
+                <span className="uc-tooltip" data-tippy-content="Nombre descriptivo del tipo de lugar (ej: Biblioteca, Aula, Laboratorio)">
+                  <i className="uc-icon">info</i>
+                </span>
+              </label>
               <input
-                id="icono"
-                name="icono"
+                id="nombre_tipo_lugar"
+                name="nombre_tipo_lugar"
                 type="text"
                 className="uc-input-style"
-                value={tipo.icono}
+                value={tipo.nombre_tipo_lugar}
                 onChange={handleChange}
                 required
-                placeholder="library"
+                placeholder="Ejemplo: Biblioteca"
               />
-              <i className="uc-icon" style={{ color: tipo.color_icono, fontSize: "24px" }}>
-                {tipo.icono}
-              </i>
             </div>
-            <div style={{ marginTop: "0.5rem", fontSize: "0.9rem", color: "#666", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <i className="uc-icon" style={{ color: "#0078D4", fontSize: "24px" }}>info</i>
-              <span>Puedes consultar la lista de íconos disponibles en <a href="https://fonts.google.com/icons" target="_blank" rel="noopener noreferrer">Google Fonts Icons</a>.</span>
-            </div>
-          </div>
 
-          <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
-            <label htmlFor="color_icono" className="uc-label-help">
-              <span className="uc-label-text">Color</span>
-            </label>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
+              <label className="uc-label-help" htmlFor="icono">
+                Ícono
+                <span className="uc-tooltip" data-tippy-content="Nombre del ícono de Google Fonts Icons que representará este tipo">
+                  <i className="uc-icon">info</i>
+                </span>
+              </label>
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                 <input
-                  id="color_icono"
-                  name="color_icono"
-                  type="color"
-                  className="uc-input-style"
-                  value={tipo.color_icono}
-                  onChange={handleChange}
-                  required
-                />
-                <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>Color Picker</span>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <input
-                  id="color_icono_hex"
-                  name="color_icono"
+                  id="icono"
+                  name="icono"
                   type="text"
                   className="uc-input-style"
-                  value={tipo.color_icono}
+                  value={tipo.icono}
                   onChange={handleChange}
-                  placeholder="#HEX"
-                  style={{ width: "100px" }}
+                  required
+                  placeholder="library"
                 />
-                <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>Hexadecimal</span>
+                <i className="uc-icon" style={{ color: tipo.color_icono, fontSize: "24px" }}>
+                  {tipo.icono}
+                </i>
+              </div>
+              <div style={{ marginTop: "0.5rem", fontSize: "0.9rem", color: "#666", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <i className="uc-icon" style={{ color: "#0078D4", fontSize: "24px" }}>info</i>
+                <span>Puedes consultar la lista de íconos disponibles en <a href="https://fonts.google.com/icons" target="_blank" rel="noopener noreferrer">Google Fonts Icons</a>.</span>
               </div>
             </div>
-          </div>
 
-          <div style={{ display: "flex", gap: "1rem", marginTop: "3rem" }}>
-            <button type="submit" className="uc-btn btn-featured" disabled={submitting}>
-              {submitting ? "Guardando..." : "Guardar"}
-            </button>
-            <button
-              type="button"
-              className="uc-btn btn-secondary"
-              style={{ backgroundColor: "#F24F4F", color: "white" }}
-              onClick={() => router.push(`/admin/places/tipos`)} // Redirigir sin considerar la paginación
-            >
-              Cancelar
-            </button>
+            <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
+              <label className="uc-label-help" htmlFor="color_icono">
+                Color
+                <span className="uc-tooltip" data-tippy-content="Color que tendrá el ícono en el mapa y la aplicación">
+                  <i className="uc-icon">info</i>
+                </span>
+              </label>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <input
+                    id="color_icono"
+                    name="color_icono"
+                    type="color"
+                    className="uc-input-style"
+                    value={tipo.color_icono}
+                    onChange={handleChange}
+                    required
+                  />
+                  <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>Color Picker</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <input
+                    id="color_icono_hex"
+                    name="color_icono"
+                    type="text"
+                    className="uc-input-style"
+                    value={tipo.color_icono}
+                    onChange={handleChange}
+                    placeholder="#HEX"
+                    style={{ width: "100px" }}
+                  />
+                  <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>Hexadecimal</span>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "1rem", marginTop: "3rem" }}>
+              <button type="submit" className="uc-btn btn-featured" disabled={submitting}>
+                {submitting ? "Guardando..." : "Guardar"}
+              </button>
+              <button
+                type="button"
+                className="uc-btn btn-secondary"
+                style={{ backgroundColor: "#F24F4F", color: "white" }}
+                onClick={() => router.push(`/admin/places/tipos`)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
           </div>
-        </form>
-      </div>
+        </div>
+      </AdminPageContainer>
 
       {/* Modal de confirmación estilo SuggestStep */}
       {showConfirmModal && (
@@ -209,7 +247,7 @@ const EditarTipoPage: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

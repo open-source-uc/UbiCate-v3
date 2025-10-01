@@ -17,6 +17,8 @@ function dataURLtoFile(dataurl: string, filename: string) {
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Place, Image as PlaceImage } from "../../../../types/placeType";
+import tippy, { Instance } from "tippy.js";
+import "tippy.js/dist/tippy.css";
 
 type PlaceWithImages = Place & { images: PlaceImage[] };
 type Option = { id: number; nombre: string };
@@ -25,6 +27,7 @@ import { EditMapProvider } from "../../../../components/context/EditMapContext";
 import EditMap from "../../../../components/ui/EditMap";
 import { marked } from "marked";
 import Image from "next/image";
+import AdminPageContainer from "../../../../components/ui/admin/AdminPageContainer";
 
 export default function EditarLugarPage() {
   // Modal states
@@ -71,6 +74,29 @@ export default function EditarLugarPage() {
         setTipoGeojsonOptions(data.tipo_geojson || []);
       });
   }, [id]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const isTouch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
+    const trigger = isTouch ? "click" : "mouseenter focus";
+
+    const instances: Instance[] = tippy(".uc-tooltip", {
+      content: (ref) => ref.getAttribute("data-tippy-content") || "",
+      theme: "uc",
+      trigger,
+      placement: "top",
+      arrow: true,
+      hideOnClick: true,
+      touch: true,
+      appendTo: () => document.body,
+      zIndex: 2147483647,
+      interactive: false,
+      delay: [50, 50],
+    });
+
+    return () => instances.forEach((i) => i.destroy());
+  }, [loading]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -169,13 +195,18 @@ export default function EditarLugarPage() {
   };
 
   return (
-    <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
-      <div className="form-container" style={{ maxWidth: 600, margin: "2rem auto", width: "100%" }}>
-        <h1>Editar Punto de Interés</h1>
+    <AdminPageContainer title="Editar Punto de Interés">
+      <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+        <div className="form-container" style={{ maxWidth: 600, width: "100%" }}>
         <form ref={formRef} onSubmit={handleEditSubmit}>
           {/* Nombre */}
           <div className="uc-form-group">
-            <label htmlFor="nombre_lugar">Nombre punto de interés</label>
+            <label className="uc-label-help" htmlFor="nombre_lugar">
+              Nombre punto de interés
+              <span className="uc-tooltip" data-tippy-content="Nombre descriptivo que aparecerá en el mapa">
+                <i className="uc-icon">info</i>
+              </span>
+            </label>
             <input
               id="nombre_lugar"
               name="nombre_lugar"
@@ -188,7 +219,12 @@ export default function EditarLugarPage() {
           </div>
           {/* Descripción con preview Markdown */}
           <div className="uc-form-group">
-            <label htmlFor="descripcion">Descripción</label>
+            <label className="uc-label-help" htmlFor="descripcion">
+              Descripción
+              <span className="uc-tooltip" data-tippy-content="Descripción detallada del lugar (soporta formato Markdown)">
+                <i className="uc-icon">info</i>
+              </span>
+            </label>
             <textarea
               id="descripcion"
               name="descripcion"
@@ -215,7 +251,12 @@ export default function EditarLugarPage() {
           </div>
           {/* Piso */}
           <div className="uc-form-group">
-            <label htmlFor="piso_punto">Piso</label>
+            <label className="uc-label-help" htmlFor="piso_punto">
+              Piso
+              <span className="uc-tooltip" data-tippy-content="Número de piso donde se encuentra el lugar">
+                <i className="uc-icon">info</i>
+              </span>
+            </label>
             <input
               id="piso_punto"
               name="piso_punto"
@@ -230,7 +271,12 @@ export default function EditarLugarPage() {
           </div>
           {/* Campus */}
           <div className="uc-form-group">
-            <label htmlFor="id_campus">Campus</label>
+            <label className="uc-label-help" htmlFor="id_campus">
+              Campus
+              <span className="uc-tooltip" data-tippy-content="Campus universitario donde se ubica el lugar">
+                <i className="uc-icon">info</i>
+              </span>
+            </label>
             <select
               id="id_campus"
               name="id_campus"
@@ -247,7 +293,12 @@ export default function EditarLugarPage() {
           </div>
           {/* Tipo de Punto */}
           <div className="uc-form-group">
-            <label htmlFor="id_tipo_lugar">Tipo de punto</label>
+            <label className="uc-label-help" htmlFor="id_tipo_lugar">
+              Tipo de punto
+              <span className="uc-tooltip" data-tippy-content="Categoría del lugar (biblioteca, aula, laboratorio, etc.)">
+                <i className="uc-icon">info</i>
+              </span>
+            </label>
             <select
               id="id_tipo_lugar"
               name="id_tipo_lugar"
@@ -264,7 +315,12 @@ export default function EditarLugarPage() {
           </div>
           {/* Tipo GeoJSON */}
           <div className="uc-form-group">
-            <label htmlFor="nombre_tipo_geojson">Tipo de GeoJSON</label>
+            <label className="uc-label-help" htmlFor="nombre_tipo_geojson">
+              Tipo de GeoJSON
+              <span className="uc-tooltip" data-tippy-content="Tipo de geometría: punto, línea o polígono">
+                <i className="uc-icon">info</i>
+              </span>
+            </label>
             <select
               id="nombre_tipo_geojson"
               name="nombre_tipo_geojson"
@@ -281,7 +337,12 @@ export default function EditarLugarPage() {
           </div>
           {/* GeoJSON */}
           <div className="uc-form-group">
-            <label htmlFor="geojson">GeoJSON</label>
+            <label className="uc-label-help" htmlFor="geojson">
+              GeoJSON
+              <span className="uc-tooltip" data-tippy-content="Coordenadas geográficas del lugar en formato GeoJSON">
+                <i className="uc-icon">info</i>
+              </span>
+            </label>
             <textarea
               id="geojson"
               name="geojson"
@@ -303,7 +364,12 @@ export default function EditarLugarPage() {
           )}
           {/* Arquitecto */}
           <div className="uc-form-group">
-            <label htmlFor="arquitecto">Arquitecto</label>
+            <label className="uc-label-help" htmlFor="arquitecto">
+              Arquitecto
+              <span className="uc-tooltip" data-tippy-content="Nombre del arquitecto responsable del diseño (opcional)">
+                <i className="uc-icon">info</i>
+              </span>
+            </label>
             <input
               id="arquitecto"
               name="arquitecto"
@@ -316,7 +382,12 @@ export default function EditarLugarPage() {
           </div>
           {/* Premio */}
           <div className="uc-form-group">
-            <label htmlFor="premio">Premio</label>
+            <label className="uc-label-help" htmlFor="premio">
+              Premio
+              <span className="uc-tooltip" data-tippy-content="Reconocimientos o premios arquitectónicos recibidos (opcional)">
+                <i className="uc-icon">info</i>
+              </span>
+            </label>
             <input
               id="premio"
               name="premio"
@@ -328,7 +399,12 @@ export default function EditarLugarPage() {
           </div>
           {/* Imágenes existentes y nuevas al final */}
           <div className="uc-form-group">
-            <label>Imágenes</label>
+            <label className="uc-label-help">
+              Imágenes
+              <span className="uc-tooltip" data-tippy-content="Fotografías del lugar para mostrar en la aplicación">
+                <i className="uc-icon">info</i>
+              </span>
+            </label>
             {(Array.isArray(place.images) ? place.images : [])
               .filter(img => !imagenesEliminadas.includes(img.id_imagen))
               .map((img: PlaceImage, idx: number) => (
@@ -489,7 +565,8 @@ export default function EditarLugarPage() {
             </div>
           )}
         </form>
+        </div>
       </div>
-    </div>
+    </AdminPageContainer>
   );
 }

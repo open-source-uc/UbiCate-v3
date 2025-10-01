@@ -4,6 +4,7 @@ import { useUser } from "@/app/components/context/userContext";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../auth-provider";
+import AdminPageContainer from "../../../components/ui/admin/AdminPageContainer";
 
 export default function Page() {
   const { user, clearUser } = useUser();
@@ -91,7 +92,9 @@ export default function Page() {
   }
 
   return (
-    <div className="container mt-60" style={{maxWidth:"96%"}}>
+    <>
+      <AdminPageContainer title="Agregar Usuario">
+        <div className="container" style={{maxWidth:"96%"}}>
       {/* Overlay y mensajes */}
       {(ucSuccessMessage || ucErrorMessage || ucWarningMessage) && (
         <>
@@ -303,7 +306,9 @@ export default function Page() {
             </form>
           </div>
         </div>
-      </div>
-    </div>
+        </div>
+        </div>
+      </AdminPageContainer>
+    </>
   );
 }

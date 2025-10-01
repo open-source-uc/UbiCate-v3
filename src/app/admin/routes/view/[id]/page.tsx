@@ -11,6 +11,7 @@ import { RouteMapProvider } from "@/app/components/context/RouteMapContext";
 import RouteMap from "@/app/components/ui/RouteMap";
 import MapUtils from "@/utils/MapUtils";
 import type { Feature } from "geojson";
+import AdminPageContainer from "../../../../components/ui/admin/AdminPageContainer";
 
 export default function ViewRoutePage() {
   const [route, setRoute] = useState<RouteWithGeo | null>(null);
@@ -115,12 +116,46 @@ export default function ViewRoutePage() {
   if (error) return <div style={{ color: "red" }}>{error}</div>;
   if (!route) return <div>Ruta no encontrada</div>;
 
+  const actionButtons = (
+    <div style={{ display: "flex", gap: "8px" }}>
+      <button
+        onClick={() => router.push(`/admin/routes/editar/${route.id_ruta}`)}
+        style={{ 
+          background: "none",
+          border: "none",
+          padding: "8px",
+          cursor: "pointer",
+          borderRadius: "4px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+        title="Editar ruta"
+      >
+        <i className="uc-icon" style={{ fontSize: "22px", color: "#0176DE" }}>edit</i>
+      </button>
+      <button
+        onClick={() => router.back()}
+        style={{ 
+          background: "none",
+          border: "none",
+          padding: "8px",
+          cursor: "pointer",
+          borderRadius: "4px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+        title="Volver"
+      >
+        <i className="uc-icon" style={{ fontSize: "22px", color: "#F24F4F" }}>close</i>
+      </button>
+    </div>
+  );
+
   return (
-    <div className="route-view-container">
-      {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h2 style={{ margin: 0, marginBottom: "12px" }}>Detalles de la Ruta</h2>
-        <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+    <AdminPageContainer title="Detalles de la Ruta" actionButton={actionButtons}>
+      <div className="route-view-container">
           <button
             onClick={() => router.push(`/admin/routes/editar/${route.id_ruta}`)}
             style={{ 
@@ -153,10 +188,7 @@ export default function ViewRoutePage() {
           >
             <i className="uc-icon" style={{ fontSize: "22px", color: "#F24F4F" }}>close</i>
           </button>
-        </div>
-      </div>
-
-      {/* Route Information Card */}
+        {/* Route Information Card */}
       <div className="route-info-card">
         <div className="route-info-grid">
           {/* Basic Info */}
@@ -443,6 +475,7 @@ export default function ViewRoutePage() {
           }
         }
       `}</style>
-    </div>
+      </div>
+    </AdminPageContainer>
   );
 }

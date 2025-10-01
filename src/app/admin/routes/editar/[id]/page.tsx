@@ -11,6 +11,7 @@ import { RouteMapProvider } from "@/app/components/context/RouteMapContext";
 import RouteMap from "@/app/components/ui/RouteMap";
 import type { Feature } from "geojson";
 import MapUtils from "@/utils/MapUtils";
+import AdminPageContainer from "../../../../components/ui/admin/AdminPageContainer";
 
 type Campus = {
   id_campus: number;
@@ -260,10 +261,9 @@ export default function EditarRutaPage() {
     });
 
   return (
-    <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
-      <div className="form-container" style={{ maxWidth: 800, margin: "2rem auto", width: "100%" }}>
-        <h1>Editar Ruta</h1>
-        <br />
+    <AdminPageContainer title="Editar Ruta">
+      <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+        <div className="form-container" style={{ maxWidth: 800, width: "100%" }}>
         
         <form ref={formRef} onSubmit={handleSubmit}>
           {/* Nombre de la ruta */}
@@ -584,6 +584,7 @@ export default function EditarRutaPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AdminPageContainer>
   );
 }
