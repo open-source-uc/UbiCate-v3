@@ -1,0 +1,1 @@
+DELETE FROM lugar_ruta WHERE fk_id_ruta = ?;

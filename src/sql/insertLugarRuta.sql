@@ -1,0 +1,1 @@
+INSERT INTO lugar_ruta (fk_id_lugar, fk_id_ruta) VALUES (?, ?);
