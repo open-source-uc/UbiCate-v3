@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'node:path';
@@ -5,13 +7,13 @@ import { query } from '@/app/lib/db';
 
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { params } = context;
   try {
+    const { id } = await context.params;
+    const routeId = parseInt(id);
     const body = await request.json();
     const { nombre_ruta, descripcion, id_campus, placeIds, geojson } = body;
-    const routeId = parseInt(params.id);
 
     if (!routeId || !nombre_ruta || !id_campus) {
       return NextResponse.json(
