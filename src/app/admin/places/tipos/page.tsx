@@ -14,6 +14,12 @@ type Tipo = {
     key?: string;
 };
 
+const PageTitle: React.FC<{ title: string }> = ({ title }) => (
+  <div style={{ marginBottom: "2rem", textAlign: "left" }}>
+    <h1 style={{ fontSize: "2rem", color: "#0176DE", margin: 0 }}>{title}</h1>
+  </div>
+);
+
 const TiposTable: React.FC = () => {
     const [tipos, setTipos] = useState<Tipo[]>([]);
     const [loading, setLoading] = useState(true);
@@ -139,15 +145,10 @@ const TiposTable: React.FC = () => {
 
     return (
         <div className="container" style={{ padding: "24px" }}>
-            <h3 className="mobileManageUserTitle">Gestión de Tipos de Lugar</h3>
-
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", alignItems: "center" }}>
-                <h3 className="desktopManageUserTitle">Gestión de Tipos de Lugar</h3>
-                <a href="/admin/places/tipos/add" className="uc-btn btn-secondary">
-                 <span style={{ paddingRight: "10px", whiteSpace: "nowrap" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                <PageTitle title="Gestión de Tipos de Lugar" />
+                <a href="/admin/places/tipos/add" className="uc-btn btn-secondary" style={{ marginLeft: "auto" }}>
                     Agregar Tipo de Lugar
-                </span>
-                    <i className="uc-icon">add</i>
                 </a>
             </div>
 

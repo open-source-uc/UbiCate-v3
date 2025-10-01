@@ -16,6 +16,12 @@ type Ruta = {
     key?: string;
 };
 
+const PageTitle: React.FC<{ title: string }> = ({ title }) => (
+  <div style={{ marginBottom: "2rem", textAlign: "left" }}>
+    <h1 style={{ fontSize: "2rem", color: "#0176DE", margin: 0 }}>{title}</h1>
+  </div>
+);
+
 const RoutesTable: React.FC = () => {
     const [rutas, setRutas] = useState<Ruta[]>([]);
     const [loading, setLoading] = useState(true);
@@ -127,10 +133,9 @@ const RoutesTable: React.FC = () => {
 
     return (
         <div className="container">
-            <h3 className="mobileManageUserTitle">Gestión de Rutas</h3>
+            <PageTitle title="Gestión de Rutas" />
 
             <div style={{ paddingBottom: "20px" }}>
-                <h3 className="desktopManageUserTitle">Gestión de Rutas</h3>
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
                     
                     <a href="/admin/routes/add" className="uc-btn btn-secondary">

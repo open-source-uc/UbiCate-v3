@@ -2,6 +2,12 @@
 
 import { useAuth } from './auth-provider'
 
+const PageTitle: React.FC<{ title: string }> = ({ title }) => (
+  <div style={{ marginBottom: "2rem", textAlign: "left" }}>
+    <h1 style={{ fontSize: "2rem", color: "#0176DE", margin: 0 }}>{title}</h1>
+  </div>
+);
+
 export default function Page() {
   const { state } = useAuth()
   
@@ -31,12 +37,15 @@ export default function Page() {
     <div
       style={{
         display: 'flex',
-        justifyContent: 'space-between',
+        flexDirection: 'column',
+        justifyContent: 'center',
         alignItems: 'center',
         padding: '1rem',
       }}
       className="w-full"
     >
+      <PageTitle title="Panel de Administración" />
+
       <div>
         <p>
           Bienvenido, <strong>{attributes.givenName} {attributes.apellidos}</strong>

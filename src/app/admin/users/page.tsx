@@ -15,20 +15,24 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+const PageTitle: React.FC<{ title: string }> = ({ title }) => (
+  <div style={{ marginBottom: "2rem", textAlign: "left" }}>
+    <h1 style={{ fontSize: "2rem", color: "#0176DE", margin: 0 }}>{title}</h1>
+  </div>
+);
+
 export default function Page() {
   const [users, setUsers] = useState<UsuarioRow[]>([]);
   const [loading, setLoading] = useState(true);
   const { state } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [rut, setRut] = useState("");
-  const [, setUcErrorMessage] = useState<string | null>(null);
-  const router = useRouter();
-  const { setUser } = useUser();
-
   const [ucMessage, setUcMessage] = useState<{
   type: "error" | "warning" | null;
   text: string | null;
-}>(() => ({ type: null, text: null }));
+}>({ type: null, text: null }); // Ensure the initial state matches the expected type
+  const router = useRouter();
+  const { setUser } = useUser();
 
 
   useEffect(() => {
@@ -133,10 +137,9 @@ export default function Page() {
     </div>
   </>
 )}
-      <h3 className="mobileManageUserTitle">Gestión de Usuarios</h3>
+      <PageTitle title="Gestión de Usuarios" />
 
       <div style={{ paddingBottom: "20px" }}>
-        <h3 className="desktopManageUserTitle">Gestión de Usuarios</h3>
         <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
           <div style={{ position: "relative" }}>
             <div
@@ -144,7 +147,7 @@ export default function Page() {
               style={{ cursor: "pointer" }}
               onClick={() => {
                 setShowModal((prev) => !prev);
-                setUcErrorMessage(null);
+                setUcMessage({ type: null, text: null });
               }}
             >
               <span style={{ paddingRight: "10px", whiteSpace: "nowrap" }}>
@@ -196,7 +199,7 @@ export default function Page() {
                       value={rut}
                       onChange={(e) => {
                         setRut(format(e.target.value));
-                        setUcErrorMessage(null);
+                        setUcMessage({ type: null, text: null });
                       }}
                       placeholder="Ingrese RUT del usuario"
                       style={{
@@ -268,9 +271,10 @@ export default function Page() {
                           }
                         } catch (error) {
                           console.error("Error buscando usuario:", error);
-                          setUcErrorMessage(
-                            "Ocurrió un error al consultar el usuario. Verifica el RUT e intenta nuevamente."
-                          );
+                          setUcMessage({
+                            type: "error",
+                            text: "Ocurrió un error al consultar el usuario. Verifica el RUT e intenta nuevamente."
+                          });
                         }
                       }}
                     >
