@@ -7,6 +7,10 @@ import { Place } from "@/app/types/placeType";
 import tippy, { Instance } from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { marked } from "marked";
+import { RouteMapProvider } from "@/app/components/context/RouteMapContext";
+import RouteMap from "@/app/components/ui/RouteMap";
+import type { Feature } from "geojson";
+import MapUtils from "@/utils/MapUtils";
 
 type Campus = {
   id_campus: number;
@@ -117,11 +121,19 @@ export default function EditarRutaPage() {
 
   const handlePlaceToggle = (placeId: number) => {
     setSelectedPlaces(prev => {
+      let updatedPlaces;
       if (prev.includes(placeId)) {
-        return prev.filter(id => id !== placeId);
+        updatedPlaces = prev.filter(id => id !== placeId);
       } else {
-        return [...prev, placeId];
+        updatedPlaces = [...prev, placeId];
       }
+
+      // Update the GeoJSON for the map
+      const updatedAssociatedPlaces = allPlaces.filter(place => updatedPlaces.includes(place.id_lugar));
+      const updatedGeojson = enrichGeojsonFeatures(route, updatedAssociatedPlaces);
+      setEnrichedGeojsonState(updatedGeojson);
+
+      return updatedPlaces;
     });
   };
 
@@ -163,6 +175,73 @@ export default function EditarRutaPage() {
     }
   };
 
+  // Filter places to only include those associated with the route
+  const associatedPlaces = allPlaces.filter(place => route?.placeIds?.includes(place.id_lugar));
+
+  const enrichGeojsonFeatures = (route: RouteWithGeo | null, places: Place[]) => {
+    const placesGeojsonRaw = places.map((place: Place) => (place as any).featureCollection || place.geojson).filter(Boolean);
+
+    const placesGeojson = placesGeojsonRaw.map((geojson: any, index: number) => {
+      const place = places[index];
+      if (!geojson || !geojson.features) return geojson;
+
+      return {
+        ...geojson,
+        features: geojson.features.map((feature: any) => ({
+          ...feature,
+          properties: {
+            ...feature.properties,
+            placeTypeId: place.id_tipo_lugar,
+            placeName: place.nombre_lugar,
+            placeIcon: place.icono,
+            placeColor: place.color_icono,
+            placeType: place.nombre_tipo_lugar
+          }
+        }))
+      };
+    });
+
+    if (route?.featureCollection) {
+      route.featureCollection.features = route.featureCollection.features.map((feature: Feature) => {
+        return {
+          ...feature,
+          properties: {
+            ...feature.properties,
+            stroke: route.color,
+          },
+        };
+      });
+    }
+
+    if (!route?.featureCollection) {
+      return { routeGeojson: null, placesGeojson };
+    }
+
+    return { routeGeojson: route.featureCollection, placesGeojson };
+  };
+
+  const enrichedGeojson = enrichGeojsonFeatures(route, associatedPlaces);
+  const [enrichedGeojsonState, setEnrichedGeojsonState] = useState(enrichedGeojson);
+
+  // Assign color and icon dynamically using MapUtils
+  if (route) {
+    route.color = MapUtils.routeIdToColor(route.id_ruta.toString());
+    route.icon = MapUtils.routeIdToIcon(route.id_ruta);
+
+    // Apply color to the route's GeoJSON features
+    if (route.featureCollection) {
+      route.featureCollection.features = route.featureCollection.features.map((feature: Feature) => {
+        return {
+          ...feature,
+          properties: {
+            ...feature.properties,
+            stroke: route.color, // Add stroke color for the route line
+          },
+        };
+      });
+    }
+  }
+
   if (loading) return <div>Cargando datos de la ruta...</div>;
   if (error) return <div style={{ color: "red" }}>{error}</div>;
   if (!route) return <div>Ruta no encontrada</div>;
@@ -184,6 +263,7 @@ export default function EditarRutaPage() {
     <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
       <div className="form-container" style={{ maxWidth: 800, margin: "2rem auto", width: "100%" }}>
         <h1>Editar Ruta</h1>
+        <br />
         
         <form ref={formRef} onSubmit={handleSubmit}>
           {/* Nombre de la ruta */}
@@ -427,9 +507,27 @@ export default function EditarRutaPage() {
               </div>
             </div>
           )}
+          
+          {/* Título del mapa */}
+          <div style={{ marginTop: "2rem" }}>
+            <h3 style={{ color: "#0176DE", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "8px" }}>
+              <i className="uc-icon">map</i>
+              Mapa de la Ruta
+            </h3>
+          </div>
+
+          {/* Mapa de la ruta */}
+          <div style={{ marginTop: "1rem", height: "400px", borderRadius: "8px", overflow: "hidden" }}>
+            <RouteMapProvider 
+              routeGeojson={enrichedGeojsonState.routeGeojson} 
+              placesGeojson={enrichedGeojsonState.placesGeojson}
+            >
+              <RouteMap />
+            </RouteMapProvider>
+          </div>
 
           {/* Botones */}
-          <div style={{ display: "flex", gap: "1rem" }}>
+          <div style={{ display: "flex", gap: "1rem", marginTop: "2rem" }}>
             <button type="submit" className="uc-btn btn-featured" disabled={submitting}>
               {submitting ? "Guardando..." : "Guardar Cambios"}
             </button>
@@ -443,6 +541,7 @@ export default function EditarRutaPage() {
             </button>
           </div>
         </form>
+
       </div>
 
       {/* Modal de confirmación */}

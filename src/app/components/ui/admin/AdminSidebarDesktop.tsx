@@ -14,6 +14,7 @@ export default function AdminSidebarDesktop(){
                   <SideOption title="Gestionar Usuarios" href="/admin/users"/>
                   <SideOption title="Gestionar Lugares" href="/admin/places"/>
                   <SideOption title="Gestionar Tipos de Lugares" href="/admin/places/tipos"/>
+                  <SideOption title="Gestionar Rutas" href="/admin/routes"/>
               </SideSection>
 
             </ul>

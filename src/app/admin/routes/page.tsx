@@ -132,7 +132,11 @@ const RoutesTable: React.FC = () => {
             <div style={{ paddingBottom: "20px" }}>
                 <h3 className="desktopManageUserTitle">Gestión de Rutas</h3>
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
+                    
                     <a href="/admin/routes/add" className="uc-btn btn-secondary">
+                    <span style={{ paddingRight: "10px", whiteSpace: "nowrap" }}>
+                        Agregar Ruta
+                    </span>
                         <i className="uc-icon">add</i>
                     </a>
                 </div>
