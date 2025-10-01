@@ -1,8 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import tippy, { Instance } from "tippy.js";
-import "tippy.js/dist/tippy.css";
 
 const EditarTipoPage: React.FC = () => {
   const router = useRouter();
@@ -37,29 +35,6 @@ const EditarTipoPage: React.FC = () => {
         });
     }
   }, [id]);
-
-  useEffect(() => {
-    if (loading) return;
-
-    const isTouch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
-    const trigger = isTouch ? "click" : "mouseenter focus";
-
-    const instances: Instance[] = tippy(".uc-tooltip", {
-      content: (ref) => ref.getAttribute("data-tippy-content") || "",
-      theme: "uc",
-      trigger,
-      placement: "top",
-      arrow: true,
-      hideOnClick: true,
-      touch: true,
-      appendTo: () => document.body,
-      zIndex: 2147483647,
-      interactive: false,
-      delay: [50, 50],
-    });
-
-    return () => instances.forEach((i) => i.destroy());
-  }, [loading]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -97,14 +72,11 @@ const EditarTipoPage: React.FC = () => {
   return (
     <div style={{ maxWidth: 600, margin: "2rem auto", padding: "0 1.5rem" }}>
       <div className="form-container" style={{ padding: "2rem" }}>
-        <h4 style={{ marginBottom: "2rem" }}>Editar Tipo</h4>
+        <h4 style={{ marginBottom: "2rem" }}>Editar Tipo de Lugar</h4>
         <form onSubmit={handleSubmit}>
           <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
             <label htmlFor="nombre_tipo_lugar" className="uc-label-help">
               <span className="uc-label-text">Nombre del tipo</span>
-              <span className="uc-tooltip" data-tippy-content="Es el nombre del tipo de lugar">
-                <i className="uc-icon">info</i>
-              </span>
             </label>
             <input
               id="nombre_tipo_lugar"
@@ -121,9 +93,6 @@ const EditarTipoPage: React.FC = () => {
           <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
             <label htmlFor="icono" className="uc-label-help">
               <span className="uc-label-text">Ícono</span>
-              <span className="uc-tooltip" data-tippy-content="Es el ícono que representa el tipo de lugar">
-                <i className="uc-icon">info</i>
-              </span>
             </label>
             <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
               <input
@@ -134,20 +103,21 @@ const EditarTipoPage: React.FC = () => {
                 value={tipo.icono}
                 onChange={handleChange}
                 required
-                placeholder="Ejemplo: library"
+                placeholder="library"
               />
               <i className="uc-icon" style={{ color: tipo.color_icono, fontSize: "24px" }}>
                 {tipo.icono}
               </i>
+            </div>
+            <div style={{ marginTop: "0.5rem", fontSize: "0.9rem", color: "#666", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <i className="uc-icon" style={{ color: "#0078D4", fontSize: "24px" }}>info</i>
+              <span>Puedes consultar la lista de íconos disponibles en <a href="https://fonts.google.com/icons" target="_blank" rel="noopener noreferrer">Google Fonts Icons</a>.</span>
             </div>
           </div>
 
           <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
             <label htmlFor="color_icono" className="uc-label-help">
               <span className="uc-label-text">Color</span>
-              <span className="uc-tooltip" data-tippy-content="Seleccione un color para el ícono">
-                <i className="uc-icon">info</i>
-              </span>
             </label>
             <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>

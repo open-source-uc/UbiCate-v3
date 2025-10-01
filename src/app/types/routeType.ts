@@ -1,4 +1,4 @@
-import { Feature, FeatureCollection, Geometry, LineString, MultiLineString } from "geojson";
+import { FeatureCollection } from "geojson";
 
 export type Route = {
     id_ruta: number;
@@ -13,6 +13,8 @@ export type Route = {
 export type RouteWithGeo = Route & {
   featureCollection?: FeatureCollection;
   placeIds: number[];
+  color?: string;
+  icon?: string;
 };
 
 export type RoutePlaces = {

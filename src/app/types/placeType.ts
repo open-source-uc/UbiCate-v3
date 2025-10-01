@@ -4,6 +4,8 @@ export type Place = {
 	id_tipo_lugar: number;
 	id_ubicacion_geografica: number;
 	nombre_tipo_lugar: string;
+	icono: string;
+	color_icono: string;
 	nombre_lugar: string;
 	nombre_campus: string;
 	descripcion: string;
@@ -13,6 +15,7 @@ export type Place = {
 	geojson: GeoJSON.FeatureCollection;
 	arquitecto: string;
 	premio: string;
+	facultad: string;
 	fk_id_estado_ubicacion_geografica: number;
 	piso_punto: number;
 }

@@ -54,7 +54,7 @@ export default function SidebarMobileAdmin({ open, onClose, topOffset }: Sidebar
           <SideSection title="Gestión" icon="settings">
             <SideOption title="Gestionar Usuarios" href="/admin/users" onClick={onClose} />
             <SideOption title="Gestionar Lugares" href="/admin/places" onClick={onClose} />
-            <SideOption title="Gestionar Tipos" href="/admin/places/tipos" onClick={onClose} />
+            <SideOption title="Gestionar Tipos de Lugares" href="/admin/places/tipos" onClick={onClose} />
           </SideSection>
         </div>
       </div>

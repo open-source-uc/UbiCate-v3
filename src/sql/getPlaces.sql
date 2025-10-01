@@ -4,6 +4,8 @@ SELECT
   tl.id_tipo_lugar,
   ug.id_ubicacion_geografica,
   tl.nombre_tipo_lugar,
+  tl.icono,
+  tl.color_icono,
   l.nombre_lugar,
   c.nombre_campus,
   ug.descripcion,

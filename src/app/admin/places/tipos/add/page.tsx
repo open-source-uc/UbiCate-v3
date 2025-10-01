@@ -67,7 +67,7 @@ const AddTipoPage: React.FC = () => {
 
   return (
     <div style={{ maxWidth: 600, margin: "2rem auto" }}>
-      <h1 style={{ marginBottom: "1.5rem" }}>Añadir Tipo</h1>
+      <h1 style={{ marginBottom: "1.5rem" }}>Añadir Tipo de Lugar</h1>
       {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
       <div className="uc-form-group" style={{ marginBottom: "1rem" }}>
         <label htmlFor="newTipo" className="uc-label-help">
@@ -105,6 +105,31 @@ const AddTipoPage: React.FC = () => {
           <i className="uc-icon" style={{ color: newTipo.color, fontSize: "24px" }}>
             {newTipo.icono}
           </i>
+        </div>
+      </div>
+
+      <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
+        <label htmlFor="icono" className="uc-label-help">
+          <span className="uc-label-text">Ícono</span>
+        </label>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <input
+            id="icono"
+            name="icono"
+            type="text"
+            className="uc-input-style"
+            value={newTipo.icono}
+            onChange={(e) => setNewTipo({ ...newTipo, icono: e.target.value })}
+            required
+            placeholder="Ejemplo: library"
+          />
+          <i className="uc-icon" style={{ color: newTipo.color, fontSize: "24px" }}>
+            {newTipo.icono}
+          </i>
+        </div>
+        <div style={{ marginTop: "0.5rem", fontSize: "0.9rem", color: "#666", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <i className="uc-icon" style={{ color: "#0078D4", fontSize: "24px" }}>info</i>
+          <span>Puedes consultar la lista de íconos disponibles en <a href="https://fonts.google.com/icons" target="_blank" rel="noopener noreferrer">Google Fonts Icons</a>.</span>
         </div>
       </div>
 

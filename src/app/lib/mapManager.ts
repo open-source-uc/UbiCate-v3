@@ -167,7 +167,7 @@ export class MapManager {
         if (!f.geometry || (f.geometry.type !== "LineString" && f.geometry.type !== "MultiLineString")) return null;
         const p:any = { ...(f.properties ?? {}) };
         const rid = String(p.routeId ?? (f as any).id ?? `route-${auto++}`);
-        const base = String(MapUtils.routeIdToColor(p.routeId));           
+        const base = p.stroke || String(MapUtils.routeIdToColor(p.routeId)); // Use stroke if available
         const hov  = MapUtils.shadeColor(base, -0.18);
         const sel  = MapUtils.shadeColor(base, -0.35);
         return { ...f, id: rid, properties: { ...p, routeId: rid, routeColorBase: base, routeColorHover: hov, routeColorSelect: sel } } as GeoJSON.Feature;
@@ -239,9 +239,9 @@ export class MapManager {
 
     const makeIcon = (name:string, color:string) => {
       const el = document.createElement("i");
-      el.className = "material-icons";
+      el.className = "uc-icon";
       el.textContent = name;
-      el.style.fontFamily = "Material Icons";
+      el.style.fontFamily = "Material Icons Outlined, Material Icons, uc-icon";
       el.style.fontSize = "22px";
       el.style.lineHeight = "1";
       el.style.color = color; // mismo tono
@@ -536,16 +536,19 @@ static drawPlaces(
     // ====== PUNTOS ======
     const ensureIconImage = (key: string, iconName: string, color: string) => {
       if (map.hasImage(key)) return;
-      const SIZE = 28, P = 4;
+      const SIZE = 28, P = 4; // Tamaño del ícono
       const c = document.createElement("canvas");
       c.width = c.height = SIZE + P*2;
       const ctx = c.getContext("2d")!;
       ctx.clearRect(0,0,c.width,c.height);
+      
+      // Solo dibujar el ícono en su color correspondiente
       ctx.fillStyle = color;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = `${SIZE}px "Material Icons"`;
+      ctx.font = `${SIZE}px "Material Icons Outlined", "Material Icons", "uc-icon"`;
       ctx.fillText(iconName, c.width/2, c.height/2 + 1);
+      
       const img = ctx.getImageData(0,0,c.width,c.height);
       map.addImage(key, img, { pixelRatio: 1 });
     };
@@ -562,7 +565,19 @@ static drawPlaces(
       else if (hasPoly) { const c = centroidOf(g.polys[0]); if (c) lnglat = c as [number, number]; }
       if (!lnglat) continue;
 
-      const spec = (() => { try { return MapUtils.idToIcon(g.props?.placeTypeId) || { icon:"home", color:"#0176DE" }; } catch { return { icon:"home", color:"#0176DE" }; }})();
+      // Usar información directa de íconos si está disponible, sino usar MapUtils
+      const spec = (() => { 
+        try { 
+          // Priorizar información directa de íconos en propiedades
+          if (g.props?.placeIcon && g.props?.placeColor) {
+            return { icon: g.props.placeIcon, color: g.props.placeColor };
+          }
+          // Fallback a MapUtils
+          return MapUtils.idToIcon(g.props?.placeTypeId) || { icon:"home", color:"#0176DE" }; 
+        } catch { 
+          return { icon:"home", color:"#0176DE" }; 
+        }
+      })();
       const base = spec.color || "#0176DE";
       const hov  = MapUtils.shadeColor(base, -0.18);
 
