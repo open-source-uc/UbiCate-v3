@@ -13,11 +13,9 @@ export const dynamic = 'force-dynamic'
 
 interface AdminLayoutProps {
   children: ReactNode;
-  title?: string;
-  actionButton?: ReactNode;
 }
 
-export default function AdminLayout({ children, title, actionButton }: AdminLayoutProps) {
+export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <Suspense
       fallback={
@@ -35,12 +33,6 @@ export default function AdminLayout({ children, title, actionButton }: AdminLayo
             <div className="main-area">
               <AdminSidebarDesktop />
               <main className="map-area" style={{ overflowY: "auto" }}>
-                {title && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                    <h1 style={{ fontSize: "2rem", color: "#0176DE", margin: 0 }}>{title}</h1>
-                    {actionButton}
-                  </div>
-                )}
                 {children}
               </main>
             </div>
