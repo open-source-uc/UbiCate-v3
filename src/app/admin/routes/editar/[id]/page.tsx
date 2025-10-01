@@ -33,7 +33,8 @@ export default function EditarRutaPage() {
   const [formData, setFormData] = useState({
     nombre_ruta: "",
     descripcion: "",
-    id_campus: 0
+    id_campus: 0,
+    geojson: ""
   });
 
   const params = useParams();
@@ -60,7 +61,8 @@ export default function EditarRutaPage() {
       setFormData({
         nombre_ruta: foundRoute.nombre_ruta,
         descripcion: foundRoute.descripcion || "",
-        id_campus: foundRoute.id_campus
+        id_campus: foundRoute.id_campus,
+        geojson: foundRoute.featureCollection ? JSON.stringify(foundRoute.featureCollection, null, 2) : ""
       });
       setSelectedPlaces(foundRoute.placeIds || []);
 
@@ -114,6 +116,15 @@ export default function EditarRutaPage() {
     if (name === "id_campus") {
       setSearchTerm(""); // Limpiar búsqueda al cambiar campus
     }
+    if (name === "geojson" && value.trim()) {
+      // Validate GeoJSON
+      try {
+        JSON.parse(value);
+        setError(""); // Clear any previous JSON errors
+      } catch {
+        setError("El GeoJSON ingresado no es válido. Debe ser un objeto GeoJSON válido.");
+      }
+    }
     setFormData(prev => ({
       ...prev,
       [name]: name === "id_campus" ? parseInt(value) : value
@@ -152,7 +163,15 @@ export default function EditarRutaPage() {
         },
         body: JSON.stringify({
           ...formData,
-          placeIds: selectedPlaces
+          placeIds: selectedPlaces,
+          geojson: (() => {
+            if (!formData.geojson || !formData.geojson.trim()) return null;
+            try {
+              return JSON.parse(formData.geojson);
+            } catch {
+              throw new Error("GeoJSON inválido");
+            }
+          })()
         })
       });
 
@@ -190,11 +209,22 @@ export default function EditarRutaPage() {
       icon: MapUtils.routeIdToIcon(route.id_ruta)
     };
 
+    // Use GeoJSON from form if it's been modified, otherwise use original
+    let featureCollection = routeWithColors.featureCollection;
+    if (formData.geojson && formData.geojson.trim()) {
+      try {
+        featureCollection = JSON.parse(formData.geojson);
+      } catch {
+        // If parsing fails, use original
+        featureCollection = routeWithColors.featureCollection;
+      }
+    }
+
     // Apply color to the route's GeoJSON features without mutating original
-    if (routeWithColors.featureCollection) {
+    if (featureCollection) {
       routeWithColors.featureCollection = {
-        ...routeWithColors.featureCollection,
-        features: routeWithColors.featureCollection.features.map((feature: Feature) => ({
+        ...featureCollection,
+        features: featureCollection.features.map((feature: Feature) => ({
           ...feature,
           properties: {
             ...feature.properties,
@@ -205,7 +235,7 @@ export default function EditarRutaPage() {
     }
 
     return routeWithColors;
-  }, [route]);
+  }, [route, formData.geojson]);
 
   const enrichGeojsonFeatures = (route: RouteWithGeo | null, places: Place[]) => {
     const placesGeojsonRaw = places.map((place: Place) => (place as any).featureCollection || place.geojson).filter(Boolean);
@@ -346,6 +376,37 @@ export default function EditarRutaPage() {
                 />
               </div>
             )}
+          </div>
+
+          {/* GeoJSON de la ruta */}
+          <div className="uc-form-group">
+            <label className="uc-label-help" htmlFor="geojson">
+              GeoJSON de la ruta
+              <span className="uc-tooltip" data-tippy-content="Coordenadas geográficas que definen el recorrido de la ruta en formato GeoJSON">
+                <i className="uc-icon">info</i>
+              </span>
+            </label>
+            <textarea
+              id="geojson"
+              name="geojson"
+              className="uc-input-style font-mono"
+              rows={8}
+              value={formData.geojson}
+              onChange={handleInputChange}
+              placeholder='{"type":"FeatureCollection","features":[{"type":"Feature","geometry":{"type":"LineString","coordinates":[...]}}]}'
+              style={{ fontSize: "0.875rem" }}
+            />
+            <div
+              className="uc-form-feedback"
+              style={{ color: "#6b7280", marginTop: 6, display: "flex", alignItems: "center" }}
+            >
+              <i className="uc-icon" style={{ verticalAlign: "middle", marginRight: 6 }}>info</i>
+              <span>
+                Genere un GeoJSON en&nbsp;
+                <a href="https://geojson.io" target="_blank" rel="noopener noreferrer">GeoJSON.io</a>
+                &nbsp;y péguelo aquí. El mapa se actualizará automáticamente.
+              </span>
+            </div>
           </div>
 
           {/* Lugares disponibles */}
