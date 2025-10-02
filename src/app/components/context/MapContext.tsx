@@ -1,6 +1,7 @@
 import { createContext, useContext, useRef, useState, useEffect, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapManager from '@/app/lib/mapManager';
+import MapUtils from '@/utils/MapUtils';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type { Campus } from '@/app/types/campusType';
 import type { FeatureCollection } from 'geojson';
@@ -49,6 +50,13 @@ export const MapProvider = ({ children }: { children: React.ReactNode }) => {
   const [places, setPlaces] = useState<PlaceWithGeo[]>([]);
   const [routes, setRoutes] = useState<RouteWithGeo[]>([]);
   const [currentCampus, setCurrentCampus] = useState<CampusWithGeo | null>(null);
+  
+  // Loading states to prevent duplicate API calls
+  const loadingStatesRef = useRef({
+    campus: false,
+    placeNames: false,
+    places: false
+  });
 
 const geolocateRef = useRef<mapboxgl.GeolocateControl | null>(null);
 
@@ -94,7 +102,11 @@ const locateUser = () => {
 
 
   useEffect(() => {
+    // Load campus data
     (async () => {
+      if (loadingStatesRef.current.campus) return;
+      loadingStatesRef.current.campus = true;
+      
       try {
         console.log('[MapProvider] Cargando datos de campus desde API...');
         const res = await fetch('/api/ubica', { cache: 'no-store' });
@@ -108,13 +120,19 @@ const locateUser = () => {
         setCampusData(data);
       } catch (error) {
         console.error('[MapProvider] Error cargando datos de campus:', error);
+      } finally {
+        loadingStatesRef.current.campus = false;
       }
     })();
 
+    // Load place types
     (async () => {
+      if (loadingStatesRef.current.placeNames) return;
+      loadingStatesRef.current.placeNames = true;
+      
       try {
         console.log('[MapProvider] Cargando tipos de punto desde API...');
-        const res = await fetch('/api/places/getTypes', { cache: 'no-store' });
+        const res = await fetch('/api/places/getTypes');
 
         if (!res.ok) {
           throw new Error(`Error al cargar tipos de punto: ${res.status} ${res.statusText}`);
@@ -123,12 +141,26 @@ const locateUser = () => {
         const data: PlaceName[] = await res.json();
         console.log(`[MapProvider] Tipos de punto cargados (${data.length} registros).`);
         setPlaceNames(data);
+        
+        // Also initialize route icons
+        try {
+          await MapUtils.initRouteIcons();
+          console.log('[MapProvider] Iconos de rutas inicializados');
+        } catch (error) {
+          console.error('[MapProvider] Error inicializando iconos de rutas:', error);
+        }
       } catch (error) {
         console.error('[MapProvider] Error cargando tipos de punto:', error);
+      } finally {
+        loadingStatesRef.current.placeNames = false;
       }
     })();
 
+    // Load places
     (async () => {
+      if (loadingStatesRef.current.places) return;
+      loadingStatesRef.current.places = true;
+      
       try {
         console.log('[MapProvider] Cargando puntos de interés desde API...');
         const res = await fetch('/api/places/getAll', { cache: 'no-store' });
@@ -138,29 +170,39 @@ const locateUser = () => {
         }
 
         const data: PlaceWithGeo[] = await res.json();
-
         setPlaces(data);
       } catch (error) {
         console.error('[MapProvider] Error cargando puntos de interés:', error);
+      } finally {
+        loadingStatesRef.current.places = false;
       }
     })();
 
-    (async () => {
-      try {
-        console.log('[MapProvider] Cargando rutas desde API...');
-        const res = await fetch('/api/getRoutes', { cache: 'no-store' });
+    // Las rutas se cargarán cuando se seleccione un campus
+    // No cargamos todas las rutas al inicio
+  }, []);
 
-        if (!res.ok) {
-          throw new Error(`Error al cargar rutas: ${res.status} ${res.statusText}`);
-        }
+  // Función para cargar rutas de un campus específico
+  const loadRoutesByCampus = useCallback(async (campusId: number) => {
+    try {
+      console.log(`[MapProvider] Cargando rutas del campus ${campusId}...`);
+      const res = await fetch('/api/routes/published', { cache: 'no-store' });
 
-        const data: RouteWithGeo[] = await res.json();
-
-        setRoutes(data);
-      } catch (error) {
-        console.error('[MapProvider] Error cargando rutas:', error);
+      if (!res.ok) {
+        throw new Error(`Error al cargar rutas: ${res.status} ${res.statusText}`);
       }
-    })();
+
+      const allRoutes: RouteWithGeo[] = await res.json();
+      
+      // Filtrar rutas por campus
+      const campusRoutes = allRoutes.filter(route => route.id_campus === campusId);
+      
+      console.log(`[MapProvider] Rutas cargadas para campus ${campusId}: ${campusRoutes.length} rutas`);
+      setRoutes(campusRoutes);
+    } catch (error) {
+      console.error(`[MapProvider] Error cargando rutas del campus ${campusId}:`, error);
+      setRoutes([]); // Limpiar rutas en caso de error
+    }
   }, []);
   
   const showPlaces = (placeTypeId: number) => {
@@ -205,7 +247,16 @@ const showRoute = (routeId: number) => {
     { type: "FeatureCollection", features: [] };
 
   const route = routes.find(r => r.id_ruta === routeId);
-  if (!route) return;
+  if (!route) {
+    console.warn(`[showRoute] Ruta ${routeId} no encontrada en el campus actual`);
+    return;
+  }
+
+  // Verificar que la ruta pertenece al campus actual
+  if (currentCampus && route.id_campus !== currentCampus.id_campus) {
+    console.warn(`[showRoute] Ruta ${routeId} no pertenece al campus actual ${currentCampus.id_campus}`);
+    return;
+  }
 
   // 🔵 toma SOLO las líneas del FC, SIN modificar coordenadas
   const fc = toFC(route.featureCollection);
@@ -277,10 +328,17 @@ const showRoute = (routeId: number) => {
 
       setCurrentCampus(campusInfo);
 
+      // Limpiar rutas anteriores del mapa
+      (map as any).__removeRoutes?.();
+      (map as any).__removePlacesPolygons?.();
+
       const dataFC: unknown =
         campusInfo.featureCollection ?? campusInfo.geojson ?? { type: 'FeatureCollection', features: [] };
 
       MapManager.drawPolygons(map, id_campus.toString(), dataFC);
+      
+      // Cargar rutas del campus seleccionado
+      loadRoutesByCampus(id_campus);
 
       const coords = MapManager.extractBounds(dataFC);
       if (coords.length > 0) {
@@ -295,7 +353,7 @@ const showRoute = (routeId: number) => {
         console.warn('[flyToCampus] No se encontraron coordenadas para ajustar la vista.');
       }
     },
-    [loaded, campusData]
+    [loaded, campusData, loadRoutesByCampus]
   );
 
   useEffect(() => {

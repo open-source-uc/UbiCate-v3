@@ -13,7 +13,7 @@ export async function PUT(
     const { id } = await context.params;
     const routeId = parseInt(id);
     const body = await request.json();
-    const { nombre_ruta, descripcion, id_campus, placeIds, geojson } = body;
+    const { nombre_ruta, descripcion, id_campus, placeIds, geojson, icono, color_icono } = body;
 
     if (!routeId || !nombre_ruta || !id_campus) {
       return NextResponse.json(
@@ -59,6 +59,8 @@ export async function PUT(
       query.run(updateRutaSQL, [
         nombre_ruta,
         id_campus,
+        icono || null,
+        color_icono || null,
         routeId
       ]);
 

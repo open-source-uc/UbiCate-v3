@@ -4,10 +4,17 @@ import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "node:path";
 import { query } from "../../../lib/db";
-import type { PlaceName } from "@/app/types/placeNameType";
 
-// Cache the place types data since it's relatively static
-let cachedPlaceTypes: PlaceName[] | null = null;
+// Type for route with icon and color info
+type RouteType = {
+  id_ruta: number;
+  nombre_ruta: string;
+  icono: string | null;
+  color_icono: string | null;
+};
+
+// Cache the route types data since it changes less frequently
+let cachedRouteTypes: RouteType[] | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
@@ -16,8 +23,8 @@ export async function GET() {
     const now = Date.now();
     
     // Check if we have valid cached data
-    if (cachedPlaceTypes && (now - cacheTimestamp) < CACHE_DURATION) {
-      return NextResponse.json(cachedPlaceTypes, {
+    if (cachedRouteTypes && (now - cacheTimestamp) < CACHE_DURATION) {
+      return NextResponse.json(cachedRouteTypes, {
         status: 200,
         headers: { 
           "Cache-Control": "public, max-age=300, stale-while-revalidate=60",
@@ -26,13 +33,14 @@ export async function GET() {
       });
     }
 
-    const sqlPath = path.join(process.cwd(), "src", "sql", "getPlaceTypes.sql");
+    // Read SQL query to get all routes with their icons and colors
+    const sqlPath = path.join(process.cwd(), "src", "sql", "getRouteTypes.sql");
     const sql = await fs.readFile(sqlPath, "utf8");
 
-    const rows = await query.all<PlaceName>(sql);
+    const rows = await query.all<RouteType>(sql);
 
     // Update cache
-    cachedPlaceTypes = rows;
+    cachedRouteTypes = rows;
     cacheTimestamp = now;
 
     return NextResponse.json(rows, {
@@ -43,7 +51,7 @@ export async function GET() {
       },
     });
   } catch (err) {
-    console.error("[DB] Error place types:", err);
+    console.error("[DB] Error getting route types:", err);
     return NextResponse.json({ error: "Error consultando BD" }, { status: 500 });
   }
 }

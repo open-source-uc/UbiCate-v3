@@ -31,20 +31,21 @@ export default function ViewRoutePage() {
 
     setLoading(true);
     try {
-      const routeResponse = await fetch("/api/getRoutes");
-      if (!routeResponse.ok) throw new Error("Failed to fetch routes");
-      const routesData = await routeResponse.json();
-
-      const foundRoute = routesData.find((r: RouteWithGeo) => r.id_ruta === parseInt(id));
-      if (!foundRoute) {
-        setError("Ruta no encontrada");
+      const routeResponse = await fetch(`/api/routes/${id}`);
+      if (!routeResponse.ok) {
+        if (routeResponse.status === 404) {
+          setError("Ruta no encontrada");
+        } else {
+          setError("Error al cargar la ruta");
+        }
         setLoading(false);
         return;
       }
+      const foundRoute = await routeResponse.json();
 
-      // Assign color and icon dynamically using MapUtils
-      foundRoute.color = MapUtils.routeIdToColor(foundRoute.id_ruta.toString());
-      foundRoute.icon = MapUtils.routeIdToIcon(foundRoute.id_ruta);
+      // Assign color and icon from database or use MapUtils as fallback
+      foundRoute.color = foundRoute.color_icono || MapUtils.routeIdToColor(foundRoute.id_ruta.toString());
+      foundRoute.icon = foundRoute.icono || MapUtils.routeIdToIcon(foundRoute.id_ruta);
 
       // Apply color to the route's GeoJSON features
       if (foundRoute.featureCollection) {
@@ -54,6 +55,8 @@ export default function ViewRoutePage() {
             properties: {
               ...feature.properties,
               stroke: foundRoute.color, // Add stroke color for the route line
+              "stroke-width": 4,        // Ensure the line is visible
+              "stroke-opacity": 0.8,    // Make it slightly transparent
             },
           };
         });
@@ -156,38 +159,6 @@ export default function ViewRoutePage() {
   return (
     <AdminPageContainer title="Detalles de la Ruta" actionButton={actionButtons}>
       <div className="route-view-container">
-          <button
-            onClick={() => router.push(`/admin/routes/editar/${route.id_ruta}`)}
-            style={{ 
-              background: "none",
-              border: "none",
-              padding: "8px",
-              cursor: "pointer",
-              borderRadius: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
-            title="Editar ruta"
-          >
-            <i className="uc-icon" style={{ fontSize: "22px", color: "#0176DE" }}>edit</i>
-          </button>
-          <button
-            onClick={() => router.push("/admin/routes")}
-            style={{ 
-              background: "none",
-              border: "none",
-              padding: "8px",
-              cursor: "pointer",
-              borderRadius: "4px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
-            title="Cerrar"
-          >
-            <i className="uc-icon" style={{ fontSize: "22px", color: "#F24F4F" }}>close</i>
-          </button>
         {/* Route Information Card */}
       <div className="route-info-card">
         <div className="route-info-grid">
@@ -205,6 +176,20 @@ export default function ViewRoutePage() {
                 <strong>Nombre:</strong> {route.nombre_ruta}
               </div>
               <div>
+                <strong>Estado:</strong>{" "}
+                <span style={{
+                  backgroundColor: route.estado_ubicacion_geografica === 2 ? "#d4edda" : "#fff3cd",
+                  color: route.estado_ubicacion_geografica === 2 ? "#155724" : "#856404",
+                  padding: "4px 12px",
+                  borderRadius: "16px",
+                  fontSize: "0.875rem",
+                  fontWeight: "500",
+                  border: `1px solid ${route.estado_ubicacion_geografica === 2 ? "#c3e6cb" : "#ffeaa7"}`
+                }}>
+                  {route.estado_ubicacion_geografica === 2 ? "Publicada" : "En construcción"}
+                </span>
+              </div>
+              <div>
                 <strong>Campus:</strong> {route.nombre_campus}
               </div>
               <div>
@@ -219,6 +204,34 @@ export default function ViewRoutePage() {
                 }}>
                   {route.placeIds?.length || 0} lugares
                 </span>
+              </div>
+              <div>
+                <strong>Apariencia:</strong>{" "}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <i className="uc-icon" style={{ 
+                      color: route.color || "#0176DE", 
+                      fontSize: "20px" 
+                    }}>
+                      {route.icon || "route"}
+                    </i>
+                    <span style={{ fontSize: "0.9rem", color: "#666" }}>
+                      {route.icon || "route"}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div style={{
+                      width: "20px",
+                      height: "20px",
+                      backgroundColor: route.color || "#0176DE",
+                      borderRadius: "4px",
+                      border: "1px solid #ddd"
+                    }}></div>
+                    <span style={{ fontSize: "0.9rem", color: "#666" }}>
+                      {route.color || "#0176DE"}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

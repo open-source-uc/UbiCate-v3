@@ -8,6 +8,9 @@ export type Route = {
 	descripcion: string;
     id_campus: number;
 	nombre_campus: string;
+	estado_ubicacion_geografica?: number;
+	icono?: string;
+	color_icono?: string;
 }
 
 export type RouteWithGeo = Route & {

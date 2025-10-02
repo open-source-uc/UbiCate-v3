@@ -14,4 +14,4 @@ join ubicacion_geografica ug
 join campus c
 	on r.fk_id_campus = c.id_campus
 where ug.fk_id_tipo_geojson = 3                -- Ruta
-and ug.fk_id_estado_ubicacion_geografica = 2   -- Aceptado
+and ug.fk_id_estado_ubicacion_geografica = 3   -- En espera

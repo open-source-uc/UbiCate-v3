@@ -1,25 +1,21 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { RouteWithGeo } from "@/app/types/routeType";
+import { useRouter } from "next/navigation";
 import { Place } from "@/app/types/placeType";
 import tippy, { Instance } from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { marked } from "marked";
 import { RouteMapProvider } from "@/app/components/context/RouteMapContext";
 import RouteMap from "@/app/components/ui/RouteMap";
-import type { Feature } from "geojson";
-import MapUtils from "@/utils/MapUtils";
-import AdminPageContainer from "../../../../components/ui/admin/AdminPageContainer";
+import AdminPageContainer from "../../../components/ui/admin/AdminPageContainer";
 
 type Campus = {
   id_campus: number;
   nombre_campus: string;
 };
 
-export default function EditarRutaPage() {
-  const [route, setRoute] = useState<RouteWithGeo | null>(null);
+export default function AgregarRutaPage() {
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
   const [campuses, setCampuses] = useState<Campus[]>([]);
   const [selectedPlaces, setSelectedPlaces] = useState<number[]>([]);
@@ -36,42 +32,15 @@ export default function EditarRutaPage() {
     id_campus: 0,
     geojson: "",
     icono: "",
-    color_icono: ""
+    color_icono: "#0176DE"
   });
 
-  const params = useParams();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const id = params?.id as string | undefined;
 
   const fetchData = useCallback(async () => {
-    if (!id) return;
-    
     setLoading(true);
     try {
-      // Fetch route data
-      const routeResponse = await fetch(`/api/routes/${id}`);
-      if (!routeResponse.ok) {
-        if (routeResponse.status === 404) {
-          setError("Ruta no encontrada");
-        } else {
-          setError("Error al cargar la ruta");
-        }
-        return;
-      }
-      const foundRoute = await routeResponse.json();
-
-      setRoute(foundRoute);
-      setFormData({
-        nombre_ruta: foundRoute.nombre_ruta,
-        descripcion: foundRoute.descripcion || "",
-        id_campus: foundRoute.id_campus,
-        geojson: foundRoute.featureCollection ? JSON.stringify(foundRoute.featureCollection, null, 2) : "",
-        icono: foundRoute.icono || "",
-        color_icono: foundRoute.color_icono || ""
-      });
-      setSelectedPlaces(foundRoute.placeIds || []);
-
       // Fetch places data
       const placesResponse = await fetch("/api/places/getAll");
       const placesData = await placesResponse.json();
@@ -88,7 +57,7 @@ export default function EditarRutaPage() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -139,21 +108,28 @@ export default function EditarRutaPage() {
 
   const handlePlaceToggle = (placeId: number) => {
     setSelectedPlaces(prev => {
-      let updatedPlaces;
       if (prev.includes(placeId)) {
-        updatedPlaces = prev.filter(id => id !== placeId);
+        return prev.filter(id => id !== placeId);
       } else {
-        updatedPlaces = [...prev, placeId];
+        return [...prev, placeId];
       }
-
-      // The enrichedGeojsonState will be automatically updated via useMemo when selectedPlaces changes
-
-      return updatedPlaces;
     });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validación básica
+    if (!formData.nombre_ruta.trim()) {
+      setError("El nombre de la ruta es requerido");
+      return;
+    }
+    
+    if (formData.id_campus === 0) {
+      setError("Debe seleccionar un campus");
+      return;
+    }
+
     setShowConfirmModal(true);
   };
 
@@ -162,8 +138,8 @@ export default function EditarRutaPage() {
     
     setSubmitting(true);
     try {
-      const response = await fetch(`/api/routes/updateRoute/${id}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/routes/createRoute`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -186,11 +162,11 @@ export default function EditarRutaPage() {
       if (response.ok) {
         router.push('/admin/routes');
       } else {
-        setError(result.message || 'Error al actualizar la ruta');
+        setError(result.message || 'Error al crear la ruta');
         setShowConfirmModal(false);
       }
     } catch (error) {
-      console.error('Error al actualizar ruta:', error);
+      console.error('Error al crear ruta:', error);
       setError('Error interno del servidor');
       setShowConfirmModal(false);
     } finally {
@@ -198,52 +174,12 @@ export default function EditarRutaPage() {
     }
   };
 
-
-
   // Filter places to only include those currently selected - using useMemo to prevent recalculation
   const associatedPlaces = useMemo(() => {
     return allPlaces.filter(place => selectedPlaces.includes(place.id_lugar));
   }, [allPlaces, selectedPlaces]);
 
-  // Assign color and icon dynamically using MapUtils - using useMemo to prevent mutation in render
-  const enrichedRoute = useMemo(() => {
-    if (!route) return null;
-    
-    const routeWithColors = {
-      ...route,
-      color: MapUtils.routeIdToColor(route.id_ruta.toString()),
-      icon: MapUtils.routeIdToIcon(route.id_ruta)
-    };
-
-    // Use GeoJSON from form if it's been modified, otherwise use original
-    let featureCollection = routeWithColors.featureCollection;
-    if (formData.geojson && formData.geojson.trim()) {
-      try {
-        featureCollection = JSON.parse(formData.geojson);
-      } catch {
-        // If parsing fails, use original
-        featureCollection = routeWithColors.featureCollection;
-      }
-    }
-
-    // Apply color to the route's GeoJSON features without mutating original
-    if (featureCollection) {
-      routeWithColors.featureCollection = {
-        ...featureCollection,
-        features: featureCollection.features.map((feature: Feature) => ({
-          ...feature,
-          properties: {
-            ...feature.properties,
-            stroke: routeWithColors.color,
-          },
-        }))
-      };
-    }
-
-    return routeWithColors;
-  }, [route, formData.geojson]);
-
-  const enrichGeojsonFeatures = (route: RouteWithGeo | null, places: Place[]) => {
+  const enrichGeojsonFeatures = useCallback((places: Place[]) => {
     const placesGeojsonRaw = places.map((place: Place) => (place as any).featureCollection || place.geojson).filter(Boolean);
 
     const placesGeojson = placesGeojsonRaw.map((geojson: any, index: number) => {
@@ -266,21 +202,37 @@ export default function EditarRutaPage() {
       };
     });
 
-    if (!route?.featureCollection) {
-      return { routeGeojson: null, placesGeojson };
+    // Parse route GeoJSON if provided
+    let routeGeojson = null;
+    if (formData.geojson && formData.geojson.trim()) {
+      try {
+        const parsedGeojson = JSON.parse(formData.geojson);
+        // Apply color from form to the route's GeoJSON features
+        routeGeojson = {
+          ...parsedGeojson,
+          features: parsedGeojson.features?.map((feature: any) => ({
+            ...feature,
+            properties: {
+              ...feature.properties,
+              stroke: formData.color_icono || "#0176DE",
+            },
+          })) || []
+        };
+      } catch {
+        // Invalid JSON, don't display route
+        routeGeojson = null;
+      }
     }
 
-    return { routeGeojson: route.featureCollection, placesGeojson };
-  };
+    return { routeGeojson, placesGeojson };
+  }, [formData.geojson, formData.color_icono]);
 
   // Calculate enriched geojson using useMemo to prevent unnecessary recalculations
   const enrichedGeojsonState = useMemo(() => {
-    return enrichGeojsonFeatures(enrichedRoute, associatedPlaces);
-  }, [enrichedRoute, associatedPlaces]);
+    return enrichGeojsonFeatures(associatedPlaces);
+  }, [associatedPlaces, enrichGeojsonFeatures]);
 
-  if (loading) return <div>Cargando datos de la ruta...</div>;
-  if (error) return <div style={{ color: "red" }}>{error}</div>;
-  if (!route) return <div>Ruta no encontrada</div>;
+  if (loading) return <div>Cargando datos...</div>;
 
   // Filter places by selected campus and search term
   const filteredPlaces = allPlaces
@@ -296,11 +248,19 @@ export default function EditarRutaPage() {
     });
 
   return (
-    <AdminPageContainer title="Editar Ruta">
+    <AdminPageContainer title="Agregar Nueva Ruta">
       <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
         <div className="form-container" style={{ maxWidth: 800, width: "100%" }}>
         
-        <form ref={formRef} onSubmit={handleSubmit}>  
+        {error && (
+          <div className="uc-message error mb-32">
+            <div className="uc-message_body">
+              <p className="no-margin">{error}</p>
+            </div>
+          </div>
+        )}
+        
+        <form ref={formRef} onSubmit={handleSubmit}>
           {/* Nombre de la ruta */}
           <div className="uc-form-group">
             <label className="uc-label-help" htmlFor="nombre_ruta">
@@ -316,6 +276,7 @@ export default function EditarRutaPage() {
               className="uc-input-style"
               value={formData.nombre_ruta}
               onChange={handleInputChange}
+              placeholder="Ej: Ruta hacia la Biblioteca Central"
               required
             />
           </div>
@@ -415,7 +376,7 @@ export default function EditarRutaPage() {
           {/* Color del ícono */}
           <div className="uc-form-group">
             <label className="uc-label-help" htmlFor="color_icono">
-              Color de la ruta
+              Color de la ruta  
               <span className="uc-tooltip" data-tippy-content="Color hexadecimal que se usará para el ícono y la línea de la ruta en el mapa">
                 <i className="uc-icon">info</i>
               </span>
@@ -640,12 +601,12 @@ export default function EditarRutaPage() {
           <div style={{ marginTop: "2rem" }}>
             <h3 style={{ color: "#0176DE", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "8px" }}>
               <i className="uc-icon">map</i>
-              Mapa de la Ruta
+              Vista Previa del Mapa
             </h3>
           </div>
 
-          {/* Mapa de la ruta */}
-          <div style={{ marginTop: "1rem", height: "400px", borderRadius: "8px", overflow: "hidden" }}>
+          {/* Mapa de la ruta - SIEMPRE VISIBLE */}
+          <div style={{ marginTop: "1rem", height: "400px", borderRadius: "8px", overflow: "hidden", border: "1px solid #ddd" }}>
             <RouteMapProvider 
               routeGeojson={enrichedGeojsonState.routeGeojson} 
               placesGeojson={enrichedGeojsonState.placesGeojson}
@@ -654,10 +615,34 @@ export default function EditarRutaPage() {
             </RouteMapProvider>
           </div>
 
+          {/* Información del mapa */}
+          <div style={{ 
+            marginTop: "0.5rem", 
+            fontSize: "0.9rem", 
+            color: "#666", 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "6px",
+            padding: "8px 12px",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "4px",
+            border: "1px solid #e9ecef"
+          }}>
+            <i className="uc-icon" style={{ fontSize: "16px" }}>info</i>
+            <span>
+              {!formData.geojson ? 
+                "Agregue un GeoJSON para ver la ruta en el mapa" : 
+                selectedPlaces.length > 0 ? 
+                  `Mostrando ruta con ${selectedPlaces.length} lugar${selectedPlaces.length !== 1 ? 'es' : ''}` :
+                  "Mostrando solo la ruta - seleccione lugares para verlos en el mapa"
+              }
+            </span>
+          </div>
+
           {/* Botones */}
           <div style={{ display: "flex", gap: "1rem", marginTop: "2rem" }}>
             <button type="submit" className="uc-btn btn-featured" disabled={submitting}>
-              {submitting ? "Guardando..." : "Guardar Cambios"}
+              {submitting ? "Creando..." : "Crear Ruta"}
             </button>
             <button
               type="button"
@@ -676,7 +661,7 @@ export default function EditarRutaPage() {
       {showConfirmModal && (
         <div className="uc-modal-overlay" role="dialog" aria-modal="true">
           <div style={{ width: "90%", minWidth: 380, maxWidth: 600 }}>
-            <div className="uc-message warning mb-32">
+            <div className="uc-message success mb-32">
               <a
                 href="#"
                 className="uc-message_close-button"
@@ -686,11 +671,16 @@ export default function EditarRutaPage() {
               </a>
               <div className="uc-message_body">
                 <h2 className="mb-24">
-                  <i className="uc-icon warning-icon">help</i> Confirmar cambios
+                  <i className="uc-icon warning-icon">help</i> Confirmar creación
                 </h2>
                 <p className="no-margin">
-                  ¿Estás seguro de que deseas guardar los cambios en la ruta <strong>{formData.nombre_ruta}</strong>?
+                  ¿Estás seguro de que deseas crear la ruta <strong>{formData.nombre_ruta}</strong>?
                 </p>
+                {selectedPlaces.length > 0 && (
+                  <p style={{ marginTop: "12px", fontSize: "0.9rem", color: "#666" }}>
+                    La ruta incluirá {selectedPlaces.length} lugar{selectedPlaces.length !== 1 ? 'es' : ''}.
+                  </p>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginTop: 24 }}>
                   <a
                     href="#"
@@ -698,7 +688,7 @@ export default function EditarRutaPage() {
                     style={{ backgroundColor: '#00AA00', color: 'white' }}
                     onClick={(e) => { e.preventDefault(); if (!submitting) confirmSave(); }}
                   >
-                    Sí, guardar cambios
+                    Sí, crear ruta
                   </a>
                   <button 
                     className="uc-btn btn-secondary text-center" 
