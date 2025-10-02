@@ -27,7 +27,6 @@ export default function EditarRutaPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -57,10 +56,15 @@ export default function EditarRutaPage() {
       const routeResponse = await fetch(`/api/routes/${id}`);
       if (!routeResponse.ok) {
         if (routeResponse.status === 404) {
-          setError("Ruta no encontrada");
+          setIsSuccess(false);
+          setModalMessage("Ruta no encontrada");
+          setModalOpen(true);
         } else {
-          setError("Error al cargar la ruta");
+          setIsSuccess(false);
+          setModalMessage("Error al cargar la ruta");
+          setModalOpen(true);
         }
+        setLoading(false);
         return;
       }
       const foundRoute = await routeResponse.json();
@@ -88,7 +92,9 @@ export default function EditarRutaPage() {
 
     } catch (error) {
       console.error("Error al cargar datos:", error);
-      setError("Error al cargar los datos");
+      setIsSuccess(false);
+      setModalMessage("No se pudieron cargar los datos de la ruta. Por favor, verifica tu conexión e inténtalo de nuevo.");
+      setModalOpen(true);
     } finally {
       setLoading(false);
     }
@@ -139,9 +145,12 @@ export default function EditarRutaPage() {
       // Validate GeoJSON
       try {
         JSON.parse(value);
-        setError(""); // Clear any previous JSON errors
+        // GeoJSON is valid, no action needed
       } catch {
-        setError("El GeoJSON ingresado no es válido. Debe ser un objeto GeoJSON válido.");
+        setIsSuccess(false);
+        setModalMessage("El formato GeoJSON no es válido. Por favor, verifica que sea un JSON válido o genera uno nuevo en geojson.io");
+        setModalOpen(true);
+        return;
       }
     }
     setFormData(prev => ({
@@ -167,6 +176,50 @@ export default function EditarRutaPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validación básica
+    if (!formData.nombre_ruta.trim()) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, ingresa un nombre para la ruta. Este campo es obligatorio.");
+      setModalOpen(true);
+      return;
+    }
+    
+    if (formData.id_campus === 0) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, selecciona el campus al que pertenece esta ruta.");
+      setModalOpen(true);
+      return;
+    }
+
+    if (!formData.descripcion.trim()) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, agrega una descripción para la ruta. Esto ayuda a los usuarios a entender qué lugares conecta.");
+      setModalOpen(true);
+      return;
+    }
+
+    if (!formData.icono.trim()) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, especifica un ícono para la ruta. Puedes consultar la lista en Google Fonts Icons.");
+      setModalOpen(true);
+      return;
+    }
+
+    if (!formData.color_icono.trim() || formData.color_icono === "#") {
+      setIsSuccess(false);
+      setModalMessage("Por favor, selecciona un color para la ruta. Esto ayuda a identificarla visualmente en el mapa.");
+      setModalOpen(true);
+      return;
+    }
+
+    if (!formData.geojson.trim()) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, agrega el GeoJSON de la ruta. Este campo define el recorrido en el mapa.");
+      setModalOpen(true);
+      return;
+    }
+
     setShowConfirmModal(true);
   };
 
@@ -299,7 +352,6 @@ export default function EditarRutaPage() {
   }, [enrichedRoute, associatedPlaces]);
 
   if (loading) return <div>Cargando datos de la ruta...</div>;
-  if (error) return <div style={{ color: "red" }}>{error}</div>;
   if (!route) return <div>Ruta no encontrada</div>;
 
   // Filter places by selected campus and search term
@@ -693,9 +745,9 @@ export default function EditarRutaPage() {
       </div>
 
       {/* Modal de confirmación */}
-      {showConfirmModal && (
+      {showConfirmModal && createPortal(
         <div className="uc-modal-overlay" role="dialog" aria-modal="true">
-          <div style={{ width: "90%", minWidth: 380, maxWidth: 600 }}>
+          <div style={{ width: "90%", maxWidth: 520 }}>
             <div className="uc-message warning mb-32">
               <a
                 href="#"
@@ -730,7 +782,8 @@ export default function EditarRutaPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal de resultado */}

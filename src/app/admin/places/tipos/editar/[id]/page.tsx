@@ -17,7 +17,6 @@ const EditarTipoPage: React.FC = () => {
     color_icono: "",
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -30,14 +29,18 @@ const EditarTipoPage: React.FC = () => {
         .then((res) => res.json())
         .then((data) => {
           if (data.error) {
-            setError(data.error);
+            setIsSuccess(false);
+            setModalMessage(data.error);
+            setModalOpen(true);
           } else {
             setTipo(data);
           }
           setLoading(false);
         })
         .catch(() => {
-          setError("No se pudo cargar el tipo");
+          setIsSuccess(false);
+          setModalMessage("No se pudo cargar el tipo");
+          setModalOpen(true);
           setLoading(false);
         });
     }
@@ -86,6 +89,31 @@ const EditarTipoPage: React.FC = () => {
   };
 
   const handleConfirmSave = async () => {
+    // Validaciones antes de enviar
+    if (!tipo.nombre_tipo_lugar.trim()) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, ingresa un nombre para el tipo de lugar. Este campo es obligatorio.");
+      setModalOpen(true);
+      setShowConfirmModal(false);
+      return;
+    }
+
+    if (!tipo.icono.trim()) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, especifica un ícono para el tipo de lugar. Puedes consultar la lista en Google Fonts Icons.");
+      setModalOpen(true);
+      setShowConfirmModal(false);
+      return;
+    }
+
+    if (!tipo.color_icono.trim() || tipo.color_icono === "#") {
+      setIsSuccess(false);
+      setModalMessage("Por favor, selecciona un color para el tipo de lugar. Esto ayuda a identificarlo visualmente en el mapa.");
+      setModalOpen(true);
+      setShowConfirmModal(false);
+      return;
+    }
+
     setSubmitting(true);
     setShowConfirmModal(false);
     try {
@@ -110,7 +138,6 @@ const EditarTipoPage: React.FC = () => {
   };
 
   if (loading) return <div>Cargando...</div>;
-  if (error) return <div>{error}</div>;
 
   return (
     <>
@@ -220,7 +247,7 @@ const EditarTipoPage: React.FC = () => {
       </AdminPageContainer>
 
       {/* Modal de confirmación estilo SuggestStep */}
-      {showConfirmModal && (
+      {showConfirmModal && createPortal(
         <div className="uc-modal-overlay" role="dialog" aria-modal="true">
           <div style={{ width: "90%", maxWidth: 520 }}>
             <div className="uc-message warning mb-32">
@@ -262,7 +289,8 @@ const EditarTipoPage: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal de resultado */}

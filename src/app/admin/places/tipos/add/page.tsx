@@ -9,16 +9,31 @@ import AdminPageContainer from "../../../../components/ui/admin/AdminPageContain
 
 const AddTipoPage: React.FC = () => {
   const [newTipo, setNewTipo] = useState({ nombre: "", icono: "", color: "" });
-  const [errorMessage, setErrorMessage] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const router = useRouter();
 
   const handleAddTipo = async () => {
-    if (!newTipo.nombre.trim() || !newTipo.icono.trim() || !newTipo.color.trim()) {
-      console.error("Todos los campos son obligatorios");
-      setErrorMessage("Todos los campos son obligatorios");
+    // Validaciones específicas por campo
+    if (!newTipo.nombre.trim()) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, ingresa un nombre para el tipo de lugar. Este campo es obligatorio para identificar el tipo.");
+      setModalOpen(true);
+      return;
+    }
+
+    if (!newTipo.icono.trim()) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, especifica un ícono para el tipo de lugar. Puedes consultar la lista en Google Fonts Icons.");
+      setModalOpen(true);
+      return;
+    }
+
+    if (!newTipo.color.trim() || newTipo.color === "#") {
+      setIsSuccess(false);
+      setModalMessage("Por favor, selecciona un color para el tipo de lugar. Esto ayuda a identificarlo visualmente en el mapa.");
+      setModalOpen(true);
       return;
     }
     try {
@@ -36,7 +51,6 @@ const AddTipoPage: React.FC = () => {
       });
       if (response.ok) {
         setNewTipo({ nombre: "", icono: "", color: "" }); // Reset form fields
-        setErrorMessage("");
         setIsSuccess(true);
         setModalMessage("¡Tipo de lugar creado con éxito!");
         setModalOpen(true);
@@ -88,7 +102,6 @@ const AddTipoPage: React.FC = () => {
   return (
     <AdminPageContainer title="Añadir Tipo de Lugar">
       <div style={{ maxWidth: 600, margin: "0 auto" }}>
-      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
       <div className="uc-form-group" style={{ marginBottom: "1rem" }}>
         <label htmlFor="newTipo" className="uc-label-help">
           <span className="uc-label-text">Nombre</span>

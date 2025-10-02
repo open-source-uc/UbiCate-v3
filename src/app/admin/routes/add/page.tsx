@@ -23,7 +23,6 @@ export default function AgregarRutaPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -57,7 +56,9 @@ export default function AgregarRutaPage() {
 
     } catch (error) {
       console.error("Error al cargar datos:", error);
-      setError("Error al cargar los datos");
+      setIsSuccess(false);
+      setModalMessage("No se pudieron cargar los datos necesarios. Por favor, verifica tu conexión e inténtalo de nuevo.");
+      setModalOpen(true);
     } finally {
       setLoading(false);
     }
@@ -99,9 +100,12 @@ export default function AgregarRutaPage() {
       // Validate GeoJSON
       try {
         JSON.parse(value);
-        setError(""); // Clear any previous JSON errors
+        // GeoJSON is valid, no action needed
       } catch {
-        setError("El GeoJSON ingresado no es válido. Debe ser un objeto GeoJSON válido.");
+        setIsSuccess(false);
+        setModalMessage("El formato GeoJSON no es válido. Por favor, verifica que sea un JSON válido o genera uno nuevo en geojson.io");
+        setModalOpen(true);
+        return;
       }
     }
     setFormData(prev => ({
@@ -125,12 +129,44 @@ export default function AgregarRutaPage() {
     
     // Validación básica
     if (!formData.nombre_ruta.trim()) {
-      setError("El nombre de la ruta es requerido");
+      setIsSuccess(false);
+      setModalMessage("Por favor, ingresa un nombre para la ruta. Este campo es obligatorio para identificar la ruta.");
+      setModalOpen(true);
       return;
     }
     
     if (formData.id_campus === 0) {
-      setError("Debe seleccionar un campus");
+      setIsSuccess(false);
+      setModalMessage("Por favor, selecciona el campus donde se encuentra esta ruta. Es necesario para organizar las rutas por ubicación.");
+      setModalOpen(true);
+      return;
+    }
+
+    if (!formData.descripcion.trim()) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, agrega una descripción para la ruta. Esto ayuda a los usuarios a entender qué lugares conecta.");
+      setModalOpen(true);
+      return;
+    }
+
+    if (!formData.icono.trim()) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, especifica un ícono para la ruta. Puedes consultar la lista en Google Fonts Icons.");
+      setModalOpen(true);
+      return;
+    }
+
+    if (!formData.color_icono.trim() || formData.color_icono === "#") {
+      setIsSuccess(false);
+      setModalMessage("Por favor, selecciona un color para la ruta. Esto ayuda a identificarla visualmente en el mapa.");
+      setModalOpen(true);
+      return;
+    }
+
+    if (!formData.geojson.trim()) {
+      setIsSuccess(false);
+      setModalMessage("Por favor, agrega el GeoJSON de la ruta. Este campo define el recorrido en el mapa.");
+      setModalOpen(true);
       return;
     }
 
@@ -263,13 +299,7 @@ export default function AgregarRutaPage() {
       <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
         <div className="form-container" style={{ maxWidth: 800, width: "100%" }}>
         
-        {error && (
-          <div className="uc-message error mb-32">
-            <div className="uc-message_body">
-              <p className="no-margin">{error}</p>
-            </div>
-          </div>
-        )}
+
         
         <form ref={formRef} onSubmit={handleSubmit}>
           {/* Nombre de la ruta */}
@@ -669,9 +699,9 @@ export default function AgregarRutaPage() {
       </div>
 
       {/* Modal de confirmación */}
-      {showConfirmModal && (
+      {showConfirmModal && createPortal(
         <div className="uc-modal-overlay" role="dialog" aria-modal="true">
-          <div style={{ width: "90%", minWidth: 380, maxWidth: 600 }}>
+          <div style={{ width: "90%", maxWidth: 520 }}>
             <div className="uc-message success mb-32">
               <a
                 href="#"
@@ -711,7 +741,8 @@ export default function AgregarRutaPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal de resultado */}
