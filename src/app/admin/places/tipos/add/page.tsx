@@ -87,28 +87,6 @@ const AddTipoPage: React.FC = () => {
         />
       </div>
 
-      <div className="uc-form-group" style={{ marginBottom: "1rem" }}>
-        <label htmlFor="newIcono" className="uc-label-help">
-          <span className="uc-label-text">Ícono</span>
-          <span className="uc-tooltip" data-tippy-content="Es el ícono que representa el tipo de lugar">
-            <i className="uc-icon">info</i>
-          </span>
-        </label>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <input
-            id="newIcono"
-            type="text"
-            className="uc-input-style"
-            value={newTipo.icono}
-            onChange={(e) => setNewTipo({ ...newTipo, icono: e.target.value })}
-            placeholder="Ícono"
-          />
-          <i className="uc-icon" style={{ color: newTipo.color, fontSize: "24px" }}>
-            {newTipo.icono}
-          </i>
-        </div>
-      </div>
-
       <div className="uc-form-group" style={{ marginBottom: "2rem" }}>
         <label htmlFor="icono" className="uc-label-help">
           <span className="uc-label-text">Ícono</span>

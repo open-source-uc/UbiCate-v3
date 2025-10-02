@@ -14,7 +14,8 @@ export const runtime = "nodejs";
 
 export async function PUT(req: NextRequest, context: any) {
   try {
-    const id = Number(context.params.id);
+    const params = await context.params;
+    const id = Number(params.id);
     if (isNaN(id)) {
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
@@ -109,7 +110,8 @@ export async function PUT(req: NextRequest, context: any) {
 
 export async function GET(req: NextRequest, context: any) {
   try {
-    const id = Number(context.params.id);
+    const params = await context.params;
+    const id = Number(params.id);
     if (isNaN(id)) {
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }

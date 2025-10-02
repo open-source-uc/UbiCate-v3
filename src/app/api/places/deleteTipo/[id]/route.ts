@@ -3,7 +3,8 @@ import { query } from "@/app/lib/db";
 
 export async function DELETE(req: NextRequest, context: any) {
   try {
-    const id = Number(context.params.id);
+    const params = await context.params;
+    const id = Number(params.id);
     if (isNaN(id)) {
       return NextResponse.json({ message: "ID inválido" }, { status: 400 });
     }
