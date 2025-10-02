@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import { Place } from "@/app/types/placeType";
 import tippy, { Instance } from "tippy.js";
 import "tippy.js/dist/tippy.css";
@@ -24,6 +25,9 @@ export default function AgregarRutaPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
   
   // Form data
   const [formData, setFormData] = useState({
@@ -160,15 +164,22 @@ export default function AgregarRutaPage() {
       const result = await response.json();
 
       if (response.ok) {
-        router.push('/admin/routes');
-      } else {
-        setError(result.message || 'Error al crear la ruta');
         setShowConfirmModal(false);
+        setIsSuccess(true);
+        setModalMessage("¡Ruta creada con éxito!");
+        setModalOpen(true);
+      } else {
+        setShowConfirmModal(false);
+        setIsSuccess(false);
+        setModalMessage(result.message || 'Error al crear la ruta');
+        setModalOpen(true);
       }
     } catch (error) {
       console.error('Error al crear ruta:', error);
-      setError('Error interno del servidor');
       setShowConfirmModal(false);
+      setIsSuccess(false);
+      setModalMessage('Error interno del servidor');
+      setModalOpen(true);
     } finally {
       setSubmitting(false);
     }
@@ -530,8 +541,8 @@ export default function AgregarRutaPage() {
                       <input
                         type="checkbox"
                         checked={selectedPlaces.includes(place.id_lugar)}
-                        onChange={() => handlePlaceToggle(place.id_lugar)}
-                        style={{ marginRight: "12px" }}
+                        onChange={() => {}} // Evento manejado por el div padre
+                        style={{ marginRight: "12px", pointerEvents: "none" }}
                       />
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1 }}>
                         {place.icono && (
@@ -701,6 +712,55 @@ export default function AgregarRutaPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de resultado */}
+      {modalOpen && createPortal(
+        <div className="uc-modal-overlay" role="dialog" aria-modal="true">
+          <div style={{ width: "90%", maxWidth: 520 }}>
+            {isSuccess ? (
+              <div className="uc-message success mb-32">
+                <a
+                  href="#"
+                  className="uc-message_close-button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setModalOpen(false);
+                    router.push("/admin/routes");
+                  }}
+                >
+                  <i className="uc-icon">close</i>
+                </a>
+                <div className="uc-message_body">
+                  <h2 className="mb-24">
+                    <i className="uc-icon warning-icon">check_circle</i> Ruta creada con éxito
+                  </h2>
+                  <p className="no-margin">{modalMessage}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="uc-message error mb-32">
+                <a
+                  href="#"
+                  className="uc-message_close-button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setModalOpen(false);
+                  }}
+                >
+                  <i className="uc-icon">close</i>
+                </a>
+                <div className="uc-message_body">
+                  <h2 className="mb-24">
+                    <i className="uc-icon warning-icon">error</i> Ha ocurrido un error
+                  </h2>
+                  <p className="no-margin">{modalMessage}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
       </div>
     </AdminPageContainer>

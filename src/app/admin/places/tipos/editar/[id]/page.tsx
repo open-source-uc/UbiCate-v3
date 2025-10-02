@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { createPortal } from "react-dom";
 import AdminPageContainer from "../../../../../components/ui/admin/AdminPageContainer";
 import tippy, { Instance } from "tippy.js";
 import "tippy.js/dist/tippy.css";
@@ -19,6 +20,9 @@ const EditarTipoPage: React.FC = () => {
   const [error, setError] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
   useEffect(() => {
     if (id) {
@@ -38,6 +42,15 @@ const EditarTipoPage: React.FC = () => {
         });
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [modalOpen]);
 
   useEffect(() => {
     if (loading) return;
@@ -74,6 +87,7 @@ const EditarTipoPage: React.FC = () => {
 
   const handleConfirmSave = async () => {
     setSubmitting(true);
+    setShowConfirmModal(false);
     try {
       const response = await fetch(`/api/places/editTipo/${id}`, {
         method: "PUT",
@@ -82,11 +96,14 @@ const EditarTipoPage: React.FC = () => {
       });
       if (!response.ok) throw new Error("Error al guardar");
 
-      router.push(`/admin/places/tipos`); // Redirigir sin considerar la paginación
+      setIsSuccess(true);
+      setModalMessage("¡Tipo de lugar actualizado con éxito!");
+      setModalOpen(true);
     } catch (error) {
       console.error("Error durante submit:", error);
-      setError("Error al guardar los cambios");
-      setShowConfirmModal(false);
+      setIsSuccess(false);
+      setModalMessage("Error al guardar los cambios");
+      setModalOpen(true);
     } finally {
       setSubmitting(false);
     }
@@ -246,6 +263,55 @@ const EditarTipoPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de resultado */}
+      {modalOpen && createPortal(
+        <div className="uc-modal-overlay" role="dialog" aria-modal="true">
+          <div style={{ width: "90%", maxWidth: 520 }}>
+            {isSuccess ? (
+              <div className="uc-message success mb-32">
+                <a
+                  href="#"
+                  className="uc-message_close-button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setModalOpen(false);
+                    router.push("/admin/places/tipos");
+                  }}
+                >
+                  <i className="uc-icon">close</i>
+                </a>
+                <div className="uc-message_body">
+                  <h2 className="mb-24">
+                    <i className="uc-icon warning-icon">check_circle</i> Tipo actualizado con éxito
+                  </h2>
+                  <p className="no-margin">{modalMessage}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="uc-message error mb-32">
+                <a
+                  href="#"
+                  className="uc-message_close-button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setModalOpen(false);
+                  }}
+                >
+                  <i className="uc-icon">close</i>
+                </a>
+                <div className="uc-message_body">
+                  <h2 className="mb-24">
+                    <i className="uc-icon warning-icon">error</i> Ha ocurrido un error
+                  </h2>
+                  <p className="no-margin">{modalMessage}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
       )}
     </>
   );

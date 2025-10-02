@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import tippy, { Instance } from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { PlaceName } from "@/app/types/placeNameType";
@@ -9,6 +10,9 @@ import AdminPageContainer from "../../../../components/ui/admin/AdminPageContain
 const AddTipoPage: React.FC = () => {
   const [newTipo, setNewTipo] = useState({ nombre: "", icono: "", color: "" });
   const [errorMessage, setErrorMessage] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
   const router = useRouter();
 
   const handleAddTipo = async () => {
@@ -33,17 +37,32 @@ const AddTipoPage: React.FC = () => {
       if (response.ok) {
         setNewTipo({ nombre: "", icono: "", color: "" }); // Reset form fields
         setErrorMessage("");
-        router.push("/admin/places/tipos");
+        setIsSuccess(true);
+        setModalMessage("¡Tipo de lugar creado con éxito!");
+        setModalOpen(true);
       } else {
         const errorData = await response.json();
         console.error("Error al añadir tipo:", errorData);
-        setErrorMessage(errorData.message || "Error al añadir tipo");
+        setIsSuccess(false);
+        setModalMessage(errorData.message || "Error al añadir tipo");
+        setModalOpen(true);
       }
     } catch (error) {
       console.error("Error al añadir tipo:", error);
-      setErrorMessage("Error al añadir tipo. Por favor, intente nuevamente.");
+      setIsSuccess(false);
+      setModalMessage("Error al añadir tipo. Por favor, intente nuevamente.");
+      setModalOpen(true);
     }
   };
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [modalOpen]);
 
   useEffect(() => {
     const isTouch = window.matchMedia("(hover: none), (pointer: coarse)").matches;
@@ -162,6 +181,55 @@ const AddTipoPage: React.FC = () => {
         </button>
       </div>
       </div>
+
+      {/* Modal */}
+      {modalOpen && createPortal(
+        <div className="uc-modal-overlay" role="dialog" aria-modal="true">
+          <div style={{ width: "90%", maxWidth: 520 }}>
+            {isSuccess ? (
+              <div className="uc-message success mb-32">
+                <a
+                  href="#"
+                  className="uc-message_close-button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setModalOpen(false);
+                    router.push("/admin/places/tipos");
+                  }}
+                >
+                  <i className="uc-icon">close</i>
+                </a>
+                <div className="uc-message_body">
+                  <h2 className="mb-24">
+                    <i className="uc-icon warning-icon">check_circle</i> Tipo creado con éxito
+                  </h2>
+                  <p className="no-margin">{modalMessage}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="uc-message error mb-32">
+                <a
+                  href="#"
+                  className="uc-message_close-button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setModalOpen(false);
+                  }}
+                >
+                  <i className="uc-icon">close</i>
+                </a>
+                <div className="uc-message_body">
+                  <h2 className="mb-24">
+                    <i className="uc-icon warning-icon">error</i> Ha ocurrido un error
+                  </h2>
+                  <p className="no-margin">{modalMessage}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
     </AdminPageContainer>
   );
 };
