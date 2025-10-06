@@ -388,6 +388,7 @@ export default function ApprovedPlacesTab() {
                         borderBottom: 'none'
                       }}
                       aria-label="Editar"
+                      title="Editar Lugar"
                     >
                       <i className="uc-icon" style={{ fontSize: 22, color: '#0176DE' }}>edit</i>
                     </Link>
@@ -402,6 +403,7 @@ export default function ApprovedPlacesTab() {
                         justifyContent: 'center'
                       }}
                       aria-label="Eliminar"
+                      title="Eliminar Lugar"
                       onClick={() => { setDeleteTarget(lugar); setModalOpen(true); }}
                     >
                       <i className="uc-icon" style={{ fontSize: 22, color: '#F24F4F' }}>delete</i>

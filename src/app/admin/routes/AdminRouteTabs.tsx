@@ -5,7 +5,7 @@ import PublishedRoutesTab from "./PublishedRoutesTab";
 
 const ROUTE_TABS = [
   { 
-    label: "Rutas Ocultas", 
+    label: "Rutas en Construcción", 
     value: "tab-01", 
     component: <PendingRoutesTab /> 
   },

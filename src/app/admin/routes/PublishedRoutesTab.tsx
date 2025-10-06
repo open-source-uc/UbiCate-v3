@@ -152,7 +152,7 @@ export default function PublishedRoutesTab() {
     if (loading) return <div>Cargando rutas publicadas...</div>;
 
     return (
-        <div className="container">
+        <>
             <div className="filters-column" style={{ marginBottom: "2rem" }}>
                 <div className="uc-form-group" style={{ maxWidth: "360px", margin: "0 auto" }}>
                     <label className="uc-label-help" htmlFor="ucsearch">
@@ -172,9 +172,8 @@ export default function PublishedRoutesTab() {
                 </div>
             </div>
 
-            <div className="results-table">
-                <table className="uc-table" style={{ width: "100%", marginBottom: "24px" }}>
-                    <thead>
+            <table className="uc-table" style={{ width: "100%", marginBottom: "24px" }}>
+                <thead>
                         <tr>
                             <th>ID</th>
                             <th>Nombre</th>
@@ -238,7 +237,7 @@ export default function PublishedRoutesTab() {
                                                     router.push(`/admin/routes/editar/${ruta.id_ruta}`);
                                                 }}
                                                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                                                title="Editar"
+                                                title="Editar Ruta"
                                             >
                                                 <i className="uc-icon" style={{ fontSize: 22, color: '#0176DE' }}>edit</i>
                                             </button>
@@ -248,7 +247,7 @@ export default function PublishedRoutesTab() {
                                                     setShowDevolverModal(true);
                                                 }}
                                                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                                                title="Devolver a Construcción"
+                                                title="Devolver Ruta a En Construcción"
                                             >
                                                 <i className="uc-icon" style={{ fontSize: 22, color: '#FEC60D' }}>construction</i>
                                             </button>
@@ -258,7 +257,7 @@ export default function PublishedRoutesTab() {
                                                     setShowDeleteModal(true);
                                                 }}
                                                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                                                title="Eliminar"
+                                                title="Eliminar Ruta"
                                             >
                                                 <i className="uc-icon" style={{ fontSize: 22, color: '#F24F4F' }}>delete</i>
                                             </button>
@@ -269,7 +268,6 @@ export default function PublishedRoutesTab() {
                         ))}
                     </tbody>
                 </table>
-            </div>
 
             {/* UC Pagination - Always visible */}
             <nav className="uc-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '24px 0' }}>
@@ -416,48 +414,6 @@ export default function PublishedRoutesTab() {
                 </div>
             )}
 
-            <style jsx>{`
-                .container {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: stretch;
-                    justify-content: flex-start;
-                    padding: 16px;
-                }
-
-                .results-table {
-                    width: 100%;
-                    display: block;
-                }
-
-                .results-table tbody tr {
-                    height: 60px;
-                }
-
-                .results-table tbody tr td {
-                    vertical-align: middle;
-                }
-
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-bottom: 24px;
-                }
-
-                th, td {
-                    padding: 0.5rem;
-                    text-align: left;
-                    border: 1px solid #ccc;
-                }
-
-                @media (max-width: 768px) {
-                    .results-table {
-                        overflow-x: auto;
-                        max-height: calc(100vh - 150px);
-                        overflow-y: auto;
-                    }
-                }
-            `}</style>
-        </div>
+        </>
     );
 }

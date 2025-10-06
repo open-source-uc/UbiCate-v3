@@ -94,6 +94,7 @@ export default function UserCard({ user, onDelete }: UserCardProps) {
             className="uc-icon icon-size--lg deleteButton"
             style={{ userSelect: "none", cursor: "pointer" }}
             onClick={() => setShowModal(true)}
+            title="Eliminar Usuario"
           >
             delete
           </i>

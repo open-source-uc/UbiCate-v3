@@ -211,6 +211,7 @@ export default function ProposedPlacesTab() {
                     setConfirmAction({ action: "aprobar", lugar });
                     setModalOpen(true);
                   }}
+                  title="Aprobar Lugar"
                 >
                   <i className="uc-icon" style={{ fontSize: 26, color: '#00AA00' }}>check</i>
                 </button>
@@ -221,6 +222,7 @@ export default function ProposedPlacesTab() {
                     setConfirmAction({ action: "rechazar", lugar });
                     setModalOpen(true);
                   }}
+                  title="Eliminar Lugar"
                 >
                   <i className="uc-icon" style={{ fontSize: 26, color: '#F24F4F' }}>delete</i>
 
@@ -231,6 +233,7 @@ export default function ProposedPlacesTab() {
                   onClick={() => {
                     window.location.href = `/admin/places/editar/${lugar.id_lugar}?tab=tab-01`;
                   }}
+                  title="Editar Lugar"
                 >
                   <i className="uc-icon" style={{ fontSize: 26, color: '#0176DE' }}>edit</i>
                 </button>

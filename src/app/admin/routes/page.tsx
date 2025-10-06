@@ -9,7 +9,6 @@ export default function RoutesPage() {
         <a
           href="/admin/routes/add"
           className="uc-btn btn-secondary btn-sm"
-          style={{ transform: "scale(0.9)" }}
         >
           <span style={{ paddingRight: "10px", whiteSpace: "nowrap" }}>
             Agregar Ruta

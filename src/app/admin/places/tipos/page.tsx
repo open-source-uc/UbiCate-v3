@@ -150,30 +150,27 @@ const TiposTable: React.FC = () => {
     );
 
     return (
-        <AdminPageContainer title="Gestión de Tipos de Lugar" actionButton={actionButton}>
-            <div className="container">
-
+        <AdminPageContainer title="Gestión de Tipos de Lugares" actionButton={actionButton}>
             <div className="filters-column" style={{ marginBottom: "2rem" }}>
-                    <div className="uc-form-group" style={{ maxWidth: "360px", margin: "0 auto" }}>
-                        <label className="uc-label-help" htmlFor="ucsearch">
-                            Buscar tipo de lugar
-                            <span className="uc-tooltip" data-tippy-content="Buscador por nombre del tipo de lugar">
-                                <i className="uc-icon">info</i>
-                            </span>
-                        </label>
-                        <input
-                            id="ucsearch"
-                            type="text"
-                            className="uc-input-style"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Nombre"
-                        />
-                    </div>
+                <div className="uc-form-group" style={{ maxWidth: "360px", margin: "0 auto" }}>
+                    <label className="uc-label-help" htmlFor="ucsearch">
+                        Buscar tipo de lugar
+                        <span className="uc-tooltip" data-tippy-content="Buscador por nombre del tipo de lugar">
+                            <i className="uc-icon">info</i>
+                        </span>
+                    </label>
+                    <input
+                        id="ucsearch"
+                        type="text"
+                        className="uc-input-style"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Nombre"
+                    />
+                </div>
             </div>
 
-            <div className="results-table" style={{ width: "100%" }}>
-                <table className="uc-table" style={{ width: "100%", marginBottom: "24px" }}>
+            <table className="uc-table" style={{ width: "100%", marginBottom: "24px" }}>
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -241,7 +238,6 @@ const TiposTable: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
-            </div>
 
             {/* UC Pagination */}
             {totalPages > 1 && (
@@ -367,50 +363,6 @@ const TiposTable: React.FC = () => {
         </div>
     </div>
 )}
-
-            <style jsx>{`
-                .container {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: stretch;
-                    justify-content: flex-start;
-                    padding: 16px;
-                }
-
-                .results-table {
-                    width: 100%;
-                    display: block;
-                }
-
-                .results-table tbody tr {
-                    height: 60px;
-                }
-
-                .results-table tbody tr td {
-                    vertical-align: middle;
-                }
-
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-bottom: 24px;
-                }
-
-                th, td {
-                    padding: 0.5rem;
-                    text-align: left;
-                    border: 1px solid #ccc;
-                }
-
-                @media (max-width: 768px) {
-                    .results-table {
-                        overflow-x: auto;
-                        max-height: calc(100vh - 150px);
-                        overflow-y: auto;
-                    }
-                }
-            `}</style>
-            </div>
         </AdminPageContainer>
     );
 };

@@ -235,10 +235,9 @@ export default function PendingRoutesTab() {
   if (!rutas.length) return <p>No hay rutas pendientes de aprobación.</p>;
 
   return (
-    <div className="container">
-      <div className="results-table">
-        <table className="uc-table" style={{ width: "100%", marginBottom: "24px" }}>
-          <caption>Rutas en construcción por aprobar</caption>
+    <>
+      <table className="uc-table" style={{ width: "100%", marginBottom: "24px" }}>
+        <caption>Rutas en construcción por aprobar</caption>
         <thead>
           <tr>
             <th scope="col">ID</th>
@@ -308,44 +307,48 @@ export default function PendingRoutesTab() {
                     gap: "8px",
                     justifyContent: "center",
                   }}>
-                <button
-                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                  aria-label="Aprobar"
-                  onClick={() => {
-                    setConfirmAction({ action: "aprobar", ruta });
-                    setModalOpen(true);
-                  }}
-                >
-                  <i className="uc-icon" style={{ fontSize: 22, color: '#28a745' }}>check</i>
-                </button>
-                <button
-                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                  aria-label="Rechazar"
-                  onClick={() => {
-                    setConfirmAction({ action: "rechazar", ruta });
-                    setModalOpen(true);
-                  }}
-                >
-                  <i className="uc-icon" style={{ fontSize: 22, color: '#F24F4F' }}>delete</i>
-                </button>
-                <button
-                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                  aria-label="Ver"
-                  onClick={() => {
-                    window.location.href = `/admin/routes/view/${ruta.id_ruta}?tab=tab-01`;
-                  }}
-                >
-                  <i className="uc-icon" style={{ fontSize: 22, color: '#FEC60D' }}>description</i>
-                </button>
-                <button
-                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                  aria-label="Editar"
-                  onClick={() => {
-                    window.location.href = `/admin/routes/editar/${ruta.id_ruta}?tab=tab-01`;
-                  }}
-                >
-                  <i className="uc-icon" style={{ fontSize: 22, color: '#0176DE' }}>edit</i>
-                </button>
+                    <button
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                      aria-label="Aprobar"
+                      title="Aprobar ruta"
+                      onClick={() => {
+                        setConfirmAction({ action: "aprobar", ruta });
+                        setModalOpen(true);
+                      }}
+                    >
+                      <i className="uc-icon" style={{ fontSize: 22, color: '#28a745' }}>check</i>
+                    </button>
+                    <button
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                      aria-label="Ver"
+                      title="Ver detalles"
+                      onClick={() => {
+                        window.location.href = `/admin/routes/view/${ruta.id_ruta}?tab=tab-01`;
+                      }}
+                    >
+                      <i className="uc-icon" style={{ fontSize: 22, color: '#FEC60D' }}>description</i>
+                    </button>
+                    <button
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                      aria-label="Editar"
+                      title="Editar ruta"
+                      onClick={() => {
+                        window.location.href = `/admin/routes/editar/${ruta.id_ruta}?tab=tab-01`;
+                      }}
+                    >
+                      <i className="uc-icon" style={{ fontSize: 22, color: '#0176DE' }}>edit</i>
+                    </button>
+                    <button
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                      aria-label="Eliminar"
+                      title="Eliminar ruta"
+                      onClick={() => {
+                        setConfirmAction({ action: "rechazar", ruta });
+                        setModalOpen(true);
+                      }}
+                    >
+                      <i className="uc-icon" style={{ fontSize: 22, color: '#F24F4F' }}>delete</i>
+                    </button>
                   </div>
                 )}
               </td>
@@ -353,7 +356,6 @@ export default function PendingRoutesTab() {
           ))}
         </tbody>
       </table>
-    </div>
 
       {/* UC Pagination */}
       <nav className="uc-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '24px 0' }}>
@@ -410,49 +412,6 @@ export default function PendingRoutesTab() {
       </nav>
 
       {modal}
-
-      <style jsx>{`
-        .container {
-          display: flex;
-          flex-direction: column;
-          align-items: stretch;
-          justify-content: flex-start;
-          padding: 16px;
-        }
-
-        .results-table {
-          width: 100%;
-          display: block;
-        }
-
-        .results-table tbody tr {
-          height: 60px;
-        }
-
-        .results-table tbody tr td {
-          vertical-align: middle;
-        }
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 24px;
-        }
-
-        th, td {
-          padding: 0.5rem;
-          text-align: left;
-          border: 1px solid #ccc;
-        }
-
-        @media (max-width: 768px) {
-          .results-table {
-            overflow-x: auto;
-            max-height: calc(100vh - 150px);
-            overflow-y: auto;
-          }
-        }
-      `}</style>
-    </div>
+    </>
   );
 }
