@@ -14,6 +14,8 @@ type RouteForApproval = {
   descripcion: string;
   placeIds: number[];
   id_ubicacion_geografica: number;
+  isEmpty?: boolean;
+  key?: string;
 };
 
 export default function PendingRoutesTab() {
@@ -28,11 +30,28 @@ export default function PendingRoutesTab() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
+  
+  // Calculate total pages based on all data
   const totalPages = Math.ceil(rutas.length / pageSize);
-  const paginatedRutas = rutas.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  
+  // Get paginated data
+  const paginatedRutas = rutas.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  
+  // Create empty rows to fill the page
+  const emptyRowsNeeded = Math.max(0, pageSize - paginatedRutas.length);
+  const emptyRows = Array.from({ length: emptyRowsNeeded }, (_, index) => ({
+    id_ruta: 0,
+    nombre_ruta: "",
+    nombre_campus: "",
+    descripcion: "",
+    placeIds: [],
+    id_ubicacion_geografica: 0,
+    isEmpty: true,
+    key: `empty-${currentPage}-${index}`
+  }));
+  
+  // Combine data with empty rows
+  const displayRows = [...paginatedRutas, ...emptyRows] as (RouteForApproval & { isEmpty?: boolean; key?: string })[];
 
   useEffect(() => {
     if (loading) return;
@@ -158,7 +177,7 @@ export default function PendingRoutesTab() {
                 }}
               >
                 {confirmAction.action === "aprobar" ? (
-                  <i className="uc-icon warning-icon">check_circle</i>
+                  <i className="uc-icon warning-icon">check</i>
                 ) : (
                   <span
                     className="material-icons" aria-hidden="true"
@@ -216,9 +235,10 @@ export default function PendingRoutesTab() {
   if (!rutas.length) return <p>No hay rutas pendientes de aprobación.</p>;
 
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table className="uc-table">
-        <caption>Rutas en construcción por aprobar</caption>
+    <div className="container">
+      <div className="results-table">
+        <table className="uc-table" style={{ width: "100%", marginBottom: "24px" }}>
+          <caption>Rutas en construcción por aprobar</caption>
         <thead>
           <tr>
             <th scope="col">ID</th>
@@ -230,40 +250,64 @@ export default function PendingRoutesTab() {
           </tr>
         </thead>
         <tbody>
-          {paginatedRutas.map((ruta) => (
-            <tr key={ruta.id_ubicacion_geografica}>
-              <td>{ruta.id_ruta}</td>
-              <td>{ruta.nombre_ruta}</td>
-              <td>{ruta.nombre_campus}</td>
+          {displayRows.map((ruta, index) => (
+            <tr key={ruta.key || ruta.id_ubicacion_geografica || `row-${index}`} className={index % 2 === 0 ? "active" : ""}>
+              <td>{ruta.isEmpty ? "" : ruta.id_ruta}</td>
               <td>
-                <span style={{ 
-                  backgroundColor: "#e8f4fd", 
-                  color: "#0176DE", 
-                  padding: "4px 8px", 
-                  borderRadius: "12px", 
-                  fontSize: "0.875rem",
-                  fontWeight: "500"
-                }}>
-                  {ruta.placeIds.length} lugares
-                </span>
+                {ruta.isEmpty ? (
+                  <span style={{ color: "transparent", userSelect: "none" }}>Texto invisible</span>
+                ) : (
+                  ruta.nombre_ruta || (
+                    <span style={{ color: "transparent", userSelect: "none" }}>Texto invisible</span>
+                  )
+                )}
               </td>
               <td>
-                <span className="uc-tooltip" data-tippy-content={ruta.descripcion || "Sin descripción"}>
-                  {ruta.descripcion 
-                    ? ruta.descripcion.length > 50 
-                      ? `${ruta.descripcion.substring(0, 50)}...` 
-                      : ruta.descripcion
-                    : "Sin descripción"
-                  }
-                </span>
+                {ruta.isEmpty ? (
+                  <span style={{ color: "transparent", userSelect: "none" }}>Texto invisible</span>
+                ) : (
+                  ruta.nombre_campus || (
+                    <span style={{ color: "transparent", userSelect: "none" }}>Texto invisible</span>
+                  )
+                )}
               </td>
-              <td
-                style={{
-                  display: "flex",
-                  gap: "8px",
-                  justifyContent: "center",
-                }}
-              >
+              <td>
+                {!ruta.isEmpty && ruta.placeIds ? (
+                  <span style={{ 
+                    backgroundColor: "#e8f4fd", 
+                    color: "#0176DE", 
+                    padding: "4px 8px", 
+                    borderRadius: "12px", 
+                    fontSize: "0.875rem",
+                    fontWeight: "500"
+                  }}>
+                    {ruta.placeIds.length} lugares
+                  </span>
+                ) : (
+                  ruta.isEmpty && <span style={{ color: "transparent", userSelect: "none" }}>Texto invisible</span>
+                )}
+              </td>
+              <td>
+                {!ruta.isEmpty ? (
+                  <span className="uc-tooltip" data-tippy-content={ruta.descripcion || "Sin descripción"}>
+                    {ruta.descripcion 
+                      ? ruta.descripcion.length > 50 
+                        ? `${ruta.descripcion.substring(0, 50)}...` 
+                        : ruta.descripcion
+                      : "Sin descripción"
+                    }
+                  </span>
+                ) : (
+                  <span style={{ color: "transparent", userSelect: "none" }}>Texto invisible</span>
+                )}
+              </td>
+              <td>
+                {!ruta.isEmpty && ruta.id_ruta && (
+                  <div style={{
+                    display: "flex",
+                    gap: "8px",
+                    justifyContent: "center",
+                  }}>
                 <button
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                   aria-label="Aprobar"
@@ -272,7 +316,7 @@ export default function PendingRoutesTab() {
                     setModalOpen(true);
                   }}
                 >
-                  <i className="uc-icon" style={{ fontSize: 22, color: '#28a745' }}>check_circle</i>
+                  <i className="uc-icon" style={{ fontSize: 22, color: '#28a745' }}>check</i>
                 </button>
                 <button
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
@@ -282,7 +326,7 @@ export default function PendingRoutesTab() {
                     setModalOpen(true);
                   }}
                 >
-                  <i className="uc-icon" style={{ fontSize: 22, color: '#F24F4F' }}>remove_circle</i>
+                  <i className="uc-icon" style={{ fontSize: 22, color: '#F24F4F' }}>delete</i>
                 </button>
                 <button
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
@@ -291,7 +335,7 @@ export default function PendingRoutesTab() {
                     window.location.href = `/admin/routes/view/${ruta.id_ruta}?tab=tab-01`;
                   }}
                 >
-                  <i className="uc-icon" style={{ fontSize: 22, color: '#28a745' }}>description</i>
+                  <i className="uc-icon" style={{ fontSize: 22, color: '#FEC60D' }}>description</i>
                 </button>
                 <button
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
@@ -302,47 +346,103 @@ export default function PendingRoutesTab() {
                 >
                   <i className="uc-icon" style={{ fontSize: 22, color: '#0176DE' }}>edit</i>
                 </button>
+                  </div>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+    </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <nav className="uc-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '24px 0' }}>
-          <button
-            className="uc-pagination_prev mr-12"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            aria-label="Anterior"
-          >
-            <i className="uc-icon">keyboard_arrow_left</i>
-          </button>
-          <ul className="uc-pagination_pages" style={{ display: 'flex', alignItems: 'center', gap: '4px', listStyle: 'none', margin: 0, padding: 0 }}>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <li key={page} className={`page-item${currentPage === page ? ' active' : ''}`}>
-                <a href="#" className="page-link" onClick={(e) => { e.preventDefault(); setCurrentPage(page); }}>{page}</a>
+      {/* UC Pagination */}
+      <nav className="uc-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '24px 0' }}>
+        <button
+          className="uc-pagination_prev mr-12"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          aria-label="Anterior"
+        >
+          <i className="uc-icon">keyboard_arrow_left</i>
+        </button>
+        <ul className="uc-pagination_pages" style={{ display: 'flex', alignItems: 'center', gap: '4px', listStyle: 'none', margin: 0, padding: 0 }}>
+          {totalPages === 0 ? (
+            <li className="page-item active">
+              <a href="#" className="page-link" onClick={e => e.preventDefault()}>1</a>
+            </li>
+          ) : (
+            <>
+              {/* First page */}
+              <li className={`page-item${currentPage === 1 ? ' active' : ''}`}>
+                <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(1); }}>1</a>
               </li>
-            ))}
-          </ul>
-          <button
-            className="uc-pagination_next ml-12"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            aria-label="Siguiente"
-          >
-            <i className="uc-icon">keyboard_arrow_right</i>
-          </button>
-        </nav>
-      )}
+              {/* Show pages around current, with ellipsis if needed */}
+              {currentPage > 3 && totalPages > 5 && (
+                <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
+              )}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => page !== 1 && page !== totalPages && Math.abs(page - currentPage) <= 1)
+                .map((page, idx) => (
+                  <li key={page + '-' + idx} className={`page-item${currentPage === page ? ' active' : ''}`}>
+                    <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(page); }}>{page}</a>
+                  </li>
+                ))}
+              {currentPage < totalPages - 2 && totalPages > 5 && (
+                <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
+              )}
+              {/* Last page */}
+              {totalPages > 1 && (
+                <li className={`page-item${currentPage === totalPages ? ' active' : ''}`}>
+                  <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(totalPages); }}>{totalPages}</a>
+                </li>
+              )}
+            </>
+          )}
+        </ul>
+        <button
+          className="uc-pagination_next ml-12"
+          disabled={currentPage === totalPages || totalPages === 0}
+          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          aria-label="Siguiente"
+        >
+          <i className="uc-icon">keyboard_arrow_right</i>
+        </button>
+      </nav>
 
       {modal}
 
       <style jsx>{`
+        .container {
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          justify-content: flex-start;
+          padding: 16px;
+        }
+
         .results-table {
           width: 100%;
           display: block;
+        }
+
+        .results-table tbody tr {
+          height: 60px;
+        }
+
+        .results-table tbody tr td {
+          vertical-align: middle;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 24px;
+        }
+
+        th, td {
+          padding: 0.5rem;
+          text-align: left;
+          border: 1px solid #ccc;
         }
 
         @media (max-width: 768px) {
@@ -351,17 +451,6 @@ export default function PendingRoutesTab() {
             max-height: calc(100vh - 150px);
             overflow-y: auto;
           }
-        }
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-
-        th, td {
-          padding: 0.5rem;
-          text-align: left;
-          border: 1px solid #ccc;
         }
       `}</style>
     </div>

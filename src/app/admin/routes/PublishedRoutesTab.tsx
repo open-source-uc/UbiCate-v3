@@ -22,7 +22,9 @@ export default function PublishedRoutesTab() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDevolverModal, setShowDevolverModal] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<Ruta | null>(null);
+    const [devolverTarget, setDevolverTarget] = useState<Ruta | null>(null);
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [errorModalMessage, setErrorModalMessage] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -83,11 +85,11 @@ export default function PublishedRoutesTab() {
     const handleReject = async () => {
         if (!deleteTarget) return;
         try {
-            // Cambiar estado a "Rechazado" en lugar de eliminar
+            // Cambiar estado a "Rechazado"
             await fetch("/api/routes/rechazar", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: deleteTarget.id_ruta }),
+                body: JSON.stringify({ id_ruta: deleteTarget.id_ruta }),
             });
             setRutas((prev) => prev.filter(r => r.id_ruta !== deleteTarget.id_ruta));
             setShowDeleteModal(false);
@@ -96,6 +98,27 @@ export default function PublishedRoutesTab() {
             console.error("Error rechazando ruta:", error);
             setShowDeleteModal(false);
             setDeleteTarget(null);
+            setErrorModalMessage("Error interno del servidor");
+            setShowErrorModal(true);
+        }
+    };
+
+    const handleDevolverEspera = async () => {
+        if (!devolverTarget) return;
+        try {
+            // Cambiar estado a "En Espera" (construcción)
+            await fetch("/api/routes/devolver-espera", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id_ruta: devolverTarget.id_ruta }),
+            });
+            setRutas((prev) => prev.filter(r => r.id_ruta !== devolverTarget.id_ruta));
+            setShowDevolverModal(false);
+            setDevolverTarget(null);
+        } catch (error) {
+            console.error("Error devolviendo ruta a construccion:", error);
+            setShowDevolverModal(false);
+            setDevolverTarget(null);
             setErrorModalMessage("Error interno del servidor");
             setShowErrorModal(true);
         }
@@ -221,13 +244,23 @@ export default function PublishedRoutesTab() {
                                             </button>
                                             <button
                                                 onClick={() => {
+                                                    setDevolverTarget(ruta);
+                                                    setShowDevolverModal(true);
+                                                }}
+                                                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                                                title="Devolver a Construcción"
+                                            >
+                                                <i className="uc-icon" style={{ fontSize: 22, color: '#FEC60D' }}>construction</i>
+                                            </button>
+                                            <button
+                                                onClick={() => {
                                                     setDeleteTarget(ruta);
                                                     setShowDeleteModal(true);
                                                 }}
                                                 style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                                                title="Rechazar"
+                                                title="Eliminar"
                                             >
-                                                <i className="uc-icon" style={{ fontSize: 22, color: '#F24F4F' }}>remove_circle</i>
+                                                <i className="uc-icon" style={{ fontSize: 22, color: '#F24F4F' }}>delete</i>
                                             </button>
                                         </div>
                                     )}
@@ -238,52 +271,88 @@ export default function PublishedRoutesTab() {
                 </table>
             </div>
 
-            {/* UC Pagination */}
-            {totalPages > 1 && (
-                <nav className="uc-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '24px 0' }}>
-                    <button
-                        className="uc-pagination_prev mr-12"
-                        disabled={currentPage === 1}
-                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                        aria-label="Anterior"
-                    >
-                        <i className="uc-icon">keyboard_arrow_left</i>
-                    </button>
-                    <ul className="uc-pagination_pages" style={{ display: 'flex', alignItems: 'center', gap: '4px', listStyle: 'none', margin: 0, padding: 0 }}>
-                        {/* First page */}
-                        <li className={`page-item${currentPage === 1 ? ' active' : ''}`}>
-                            <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(1); }}>1</a>
-                        </li>
-                        {/* Show pages around current, with ellipsis if needed */}
-                        {currentPage > 3 && totalPages > 5 && (
-                            <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
-                        )}
-                        {Array.from({ length: totalPages }, (_, i) => i + 1)
-                            .filter(page => page !== 1 && page !== totalPages && Math.abs(page - currentPage) <= 1)
-                            .map((page, idx) => (
-                                <li key={page + '-' + idx} className={`page-item${currentPage === page ? ' active' : ''}`}>
-                                    <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(page); }}>{page}</a>
-                                </li>
-                            ))}
-                        {currentPage < totalPages - 2 && totalPages > 5 && (
-                            <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
-                        )}
-                        {/* Last page */}
-                        {totalPages > 1 && (
-                            <li className={`page-item${currentPage === totalPages ? ' active' : ''}`}>
-                                <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(totalPages); }}>{totalPages}</a>
+            {/* UC Pagination - Always visible */}
+            <nav className="uc-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '24px 0' }}>
+                <button
+                    className="uc-pagination_prev mr-12"
+                    disabled={currentPage === 1 || totalPages === 0}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    aria-label="Anterior"
+                >
+                    <i className="uc-icon">keyboard_arrow_left</i>
+                </button>
+                <ul className="uc-pagination_pages" style={{ display: 'flex', alignItems: 'center', gap: '4px', listStyle: 'none', margin: 0, padding: 0 }}>
+                    {/* First page */}
+                    <li className={`page-item${currentPage === 1 ? ' active' : ''}`}>
+                        <a href="#" className="page-link" onClick={e => { e.preventDefault(); if (totalPages > 0) setCurrentPage(1); }}>
+                            {totalPages === 0 ? '0' : '1'}
+                        </a>
+                    </li>
+                    {/* Show pages around current, with ellipsis if needed */}
+                    {currentPage > 3 && totalPages > 5 && (
+                        <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
+                    )}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(page => page !== 1 && page !== totalPages && Math.abs(page - currentPage) <= 1)
+                        .map((page, idx) => (
+                            <li key={page + '-' + idx} className={`page-item${currentPage === page ? ' active' : ''}`}>
+                                <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(page); }}>{page}</a>
                             </li>
-                        )}
-                    </ul>
-                    <button
-                        className="uc-pagination_next ml-12"
-                        disabled={currentPage === totalPages}
-                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                        aria-label="Siguiente"
-                    >
-                        <i className="uc-icon">keyboard_arrow_right</i>
-                    </button>
-                </nav>
+                        ))}
+                    {currentPage < totalPages - 2 && totalPages > 5 && (
+                        <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
+                    )}
+                    {/* Last page */}
+                    {totalPages > 1 && (
+                        <li className={`page-item${currentPage === totalPages ? ' active' : ''}`}>
+                            <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(totalPages); }}>{totalPages}</a>
+                        </li>
+                    )}
+                </ul>
+                <button
+                    className="uc-pagination_next ml-12"
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    aria-label="Siguiente"
+                >
+                    <i className="uc-icon">keyboard_arrow_right</i>
+                </button>
+            </nav>
+
+            {showDevolverModal && (
+                <div className="uc-modal-overlay" role="dialog" aria-modal="true">
+                    <div style={{ width: "90%", minWidth: 380, maxWidth: 600 }}>
+                        <div className="uc-message warning mb-32">
+                            <a
+                                href="#"
+                                className="uc-message_close-button"
+                                onClick={(e) => { e.preventDefault(); setShowDevolverModal(false); setDevolverTarget(null); }}
+                            >
+                                <i className="uc-icon">close</i>
+                            </a>
+                            <div className="uc-message_body">
+                                <h2 className="mb-24">
+                                    <i className="uc-icon warning-icon">warning</i> Confirmar devolución a construcción
+                                </h2>
+                                <p className="no-margin">¿Estás seguro de que deseas devolver la ruta <strong>{devolverTarget?.nombre_ruta}</strong> a estado &ldquo;En Construcción&rdquo;?</p>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginTop: 24 }}>
+                                    <a
+                                        href="#"
+                                        className="uc-btn btn-secondary text-center"
+                                        style={{ backgroundColor: '#00AA00', color: 'white' }}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            handleDevolverEspera();
+                                        }}
+                                    >
+                                        Sí, devolver
+                                    </a>
+                                    <button className="uc-btn btn-secondary text-center" onClick={() => { setShowDevolverModal(false); setDevolverTarget(null); }}>No, cancelar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {showDeleteModal && (
@@ -299,20 +368,20 @@ export default function PublishedRoutesTab() {
                             </a>
                             <div className="uc-message_body">
                                 <h2 className="mb-24">
-                                    <i className="uc-icon warning-icon">error</i> Confirmar rechazo
+                                    <i className="uc-icon warning-icon">delete</i> Confirmar eliminación
                                 </h2>
-                                <p className="no-margin">¿Estás seguro de que deseas rechazar la ruta <strong>{deleteTarget?.nombre_ruta}</strong>?</p>
+                                <p className="no-margin">¿Estás seguro de que deseas eliminar permanentemente la ruta <strong>{deleteTarget?.nombre_ruta}</strong>? Esta acción no se puede deshacer.</p>
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginTop: 24 }}>
                                     <a
                                         href="#"
                                         className="uc-btn btn-secondary text-center"
-                                        style={{ backgroundColor: '#00AA00', color: 'white' }}
+                                        style={{ backgroundColor: '#F24F4F', color: 'white' }}
                                         onClick={(e) => {
                                             e.preventDefault();
                                             handleReject();
                                         }}
                                     >
-                                        Sí, rechazar
+                                        Sí, eliminar
                                     </a>
                                     <button className="uc-btn btn-secondary text-center" onClick={() => { setShowDeleteModal(false); setDeleteTarget(null); }}>No, cancelar</button>
                                 </div>
