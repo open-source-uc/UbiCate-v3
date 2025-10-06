@@ -4,7 +4,7 @@ import AdminPageContainer from "../../components/ui/admin/AdminPageContainer";
 
 export default function Page() {
   return (
-    <AdminPageContainer title="Gestion de Lugares">
+    <AdminPageContainer title="Gestión de Lugares">
       <AdminTabs />
     </AdminPageContainer>
   );
