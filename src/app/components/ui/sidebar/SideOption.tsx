@@ -8,6 +8,8 @@ type SideOptionProps = {
   title: string;
   placeId?: number;
   routeId?: number;
+  icon?: string;
+  iconColor?: string;
   style?: CSSProperties;
   href?: string;
   onClick?: () => void;
@@ -19,6 +21,8 @@ export default function SideOption({
   title,
   routeId,
   placeId,
+  icon,
+  iconColor: customIconColor,
   href,
   onClick,
 }: SideOptionProps) {
@@ -36,8 +40,8 @@ export default function SideOption({
   const handleFocus = () => setIsActive(true);
   const handleBlur = () => setIsActive(false);
 
-  const iconColor = iconInfo?.color ?? (routeId ? MapUtils.routeIdToColor(`${routeId}`) : '');
-  const iconName = iconInfo?.icon ?? (routeId ? MapUtils.routeIdToIcon(routeId) : 'keyboard_arrow_right');
+  const iconColor = customIconColor ?? iconInfo?.color ?? (routeId ? MapUtils.routeIdToColor(`${routeId}`) : '');
+  const iconName = icon ?? iconInfo?.icon ?? (routeId ? MapUtils.routeIdToIcon(routeId) : 'keyboard_arrow_right');
 
   return (
     <li className="" onClick={onClick ? onClick : (e) => e.preventDefault()}>
