@@ -73,8 +73,15 @@ const AddTipoPage: React.FC = () => {
     if (!modalOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    
+    // Auto-close modal after 5 seconds
+    const timer = setTimeout(() => {
+      setModalOpen(false);
+    }, 5000);
+    
     return () => {
       document.body.style.overflow = prev;
+      clearTimeout(timer);
     };
   }, [modalOpen]);
 

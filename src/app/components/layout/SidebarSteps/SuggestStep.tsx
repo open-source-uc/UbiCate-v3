@@ -1,6 +1,5 @@
 "use client";
 
-import type { StepProps } from "@/app/types/stepProps";
 import { StepTagAttributes } from "@/app/types/stepTagAttributes";
 import "../../ui/css/Form.css";
 import { useEffect, useState, useMemo } from "react";
@@ -17,7 +16,6 @@ import type { Feature } from "geojson";
 import { useSidebar } from "../../context/SidebarContext";
 
 type Option = { id: number; nombre: string };
-type SuggestStepProps = { onClose?: () => void };
 
 export default function SuggestStep() {
   const [loading, setLoading] = useState(true);
@@ -34,7 +32,7 @@ export default function SuggestStep() {
   const [imagenesSeleccionadas, setImagenesSeleccionadas] = useState<{ file: File; descripcion: string }[]>([]);
 
   const { mapRef } = useMap();
-  const { setQueryParam, clearQueryParams, closeSidebar } = useSidebar();
+  const { clearQueryParams, closeSidebar } = useSidebar();
 
   const stepAttrs = useMemo(() => {
     const cls = (StepTagAttributes as { className?: string })?.className ?? "";
@@ -45,8 +43,15 @@ export default function SuggestStep() {
     if (!modalOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    
+    // Auto-close modal after 5 seconds
+    const timer = setTimeout(() => {
+      setModalOpen(false);
+    }, 5000);
+    
     return () => {
       document.body.style.overflow = prev;
+      clearTimeout(timer);
     };
   }, [modalOpen]);
 

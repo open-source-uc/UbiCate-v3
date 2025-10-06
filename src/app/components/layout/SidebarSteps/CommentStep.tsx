@@ -1,6 +1,6 @@
 "use client";
 
-import type { StepProps } from "@/app/types/stepProps";
+
 import { StepTagAttributes } from "@/app/types/stepTagAttributes";
 import "../../ui/css/Form.css";
 import { useEffect, useState, useMemo } from "react";
@@ -9,9 +9,6 @@ import tippy, { Instance } from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { useSidebar } from "../../context/SidebarContext";
 
-type CommentStepProps = StepProps & {
-  onClose?: () => void;
-};
 
 export default function CommentStep() {
   const [submitting, setSubmitting] = useState(false);
@@ -35,8 +32,15 @@ export default function CommentStep() {
     if (!modalOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    
+    // Auto-close modal after 5 seconds
+    const timer = setTimeout(() => {
+      setModalOpen(false);
+    }, 5000);
+    
     return () => {
       document.body.style.overflow = prev;
+      clearTimeout(timer);
     };
   }, [modalOpen]);
 

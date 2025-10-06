@@ -95,11 +95,6 @@ useEffect(() => {
   };
 }, []);
 
-// 👉 Función que puedes disparar desde un botón o evento
-const locateUser = () => {
-  geolocateRef.current?.trigger();
-};
-
 
   useEffect(() => {
     // Load campus data

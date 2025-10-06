@@ -30,6 +30,15 @@ export default function Page() {
   const router = useRouter();
   const { setUser } = useUser();
 
+  // Auto-close ucMessage modal after 5 seconds
+  useEffect(() => {
+    if (ucMessage.type) {
+      const timer = setTimeout(() => {
+        setUcMessage({ type: null, text: null });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [ucMessage.type]);
 
   useEffect(() => {
     fetch("/api/usuario/getAdmins")
