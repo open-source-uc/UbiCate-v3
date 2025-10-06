@@ -273,7 +273,7 @@ const showRoute = (routeId: number) => {
 
   (map as any).__removeRoutes?.();
 
-  MapManager.drawRoutes(map, { type: "FeatureCollection", features }, { fit: true, showEndpoints: false });
+  MapManager.drawRoutes(map, { type: "FeatureCollection", features }, { fit: true, showEndpoints: true });
 
   const filteredPlaces = places.filter(place => route?.placeIds.includes(place.id_lugar))
 
