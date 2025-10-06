@@ -77,13 +77,16 @@ const AddTipoPage: React.FC = () => {
     // Auto-close modal after 5 seconds
     const timer = setTimeout(() => {
       setModalOpen(false);
+      if (isSuccess) {
+        router.push("/admin/places/tipos");
+      }
     }, 5000);
     
     return () => {
       document.body.style.overflow = prev;
       clearTimeout(timer);
     };
-  }, [modalOpen]);
+  }, [modalOpen, isSuccess, router]);
 
   useEffect(() => {
     const isTouch = window.matchMedia("(hover: none), (pointer: coarse)").matches;

@@ -47,13 +47,16 @@ export default function SuggestStep() {
     // Auto-close modal after 5 seconds
     const timer = setTimeout(() => {
       setModalOpen(false);
+      if (isSuccess) {
+        clearQueryParams();
+      }
     }, 5000);
     
     return () => {
       document.body.style.overflow = prev;
       clearTimeout(timer);
     };
-  }, [modalOpen]);
+  }, [modalOpen, isSuccess, clearQueryParams]);
 
   useEffect(() => {
     (async () => {

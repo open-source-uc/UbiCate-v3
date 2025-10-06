@@ -135,13 +135,16 @@ export default function EditarRutaPage() {
     // Auto-close modal after 5 seconds
     const timer = setTimeout(() => {
       setModalOpen(false);
+      if (isSuccess) {
+        router.push("/admin/routes");
+      }
     }, 5000);
     
     return () => {
       document.body.style.overflow = prev;
       clearTimeout(timer);
     };
-  }, [modalOpen]);
+  }, [modalOpen, isSuccess, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

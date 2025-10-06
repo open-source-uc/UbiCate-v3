@@ -76,13 +76,16 @@ export default function AgregarRutaPage() {
     
     const timer = setTimeout(() => {
       setModalOpen(false);
+      if (isSuccess) {
+        router.push("/admin/routes");
+      }
     }, 5000);
     
     return () => {
       document.body.style.overflow = prev;
       clearTimeout(timer);
     };
-  }, [modalOpen]);
+  }, [modalOpen, isSuccess, router]);
 
   useEffect(() => {
     if (loading) return;
