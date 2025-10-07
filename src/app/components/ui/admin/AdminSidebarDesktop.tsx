@@ -22,6 +22,10 @@ export default function AdminSidebarDesktop(){
                   <SideOption title="Gestionar Tipos de Lugares" href="/admin/places/tipos" icon="category" iconColor="#0176DE"/>
                   <SideOption title="Gestionar Rutas" href="/admin/routes" icon="route" iconColor="#0176DE"/>
               </SideSection>
+              <SideSection title="Auditoría" icon="history">
+                <SideOption title="Historial de Cambios de Lugares" href="/admin/historico/places" icon="timeline" iconColor="#0176DE"/>
+                <SideOption title="Historial de Cambios de Rutas" href="/admin/historico/routes" icon="timeline" iconColor="#0176DE"/>
+              </SideSection>
             </ul>
           </aside>
     );

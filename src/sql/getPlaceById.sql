@@ -8,6 +8,7 @@ SELECT
   c.nombre_campus,
   ug.descripcion,
   eug.nombre_estado,
+  ug.fk_id_estado_ubicacion_geografica,
   tg.nombre_tipo_geojson,
   tg.id_tipo_geojson,
   ug.geojson,

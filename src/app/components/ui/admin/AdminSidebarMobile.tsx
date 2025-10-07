@@ -68,6 +68,10 @@ export default function SidebarMobileAdmin({ open, onClose, topOffset }: Sidebar
               <SideOption title="Gestionar Tipos de Lugares" href="/admin/places/tipos" onClick={onClose} icon="category" iconColor="#0176DE"/>
               <SideOption title="Gestionar Rutas" href="/admin/routes" onClick={onClose} icon="route" iconColor="#0176DE"/>
             </SideSection>
+            <SideSection title="Auditoría" icon="history">
+              <SideOption title="Historial de Cambios de Lugares" href="/admin/historico/places" onClick={onClose} icon="timeline" iconColor="#0176DE"/>
+              <SideOption title="Historial de Cambios de Rutas" href="/admin/historico/routes" onClick={onClose} icon="timeline" iconColor="#0176DE"/>
+            </SideSection>
           </ul>
         </div>
       </div>

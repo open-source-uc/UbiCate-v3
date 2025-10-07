@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "node:path";
 import { query } from "@/app/lib/db";
+import { registrarHistorico } from "@/app/lib/auditLog";
+import { obtenerUsuarioAutenticado } from "@/app/lib/auth";
 import type { FeatureCollection } from "geojson";
 import type { Place, Image } from "@/app/types/placeType";
 import MapUtils from "@/utils/MapUtils";
@@ -97,6 +99,23 @@ export async function PUT(req: NextRequest, context: any) {
         [id_ubicacion_geografica, imageBuffer, nueva.descripcion || "", mime_type]
       );
     }
+
+    // Obtener usuario autenticado
+    const usuario = await obtenerUsuarioAutenticado();
+
+    // Obtener nombre del lugar para el histórico
+    const lugarNombre = await query.get<{ nombre_lugar: string }>(
+      'SELECT nombre_lugar FROM lugar WHERE fk_id_ubicacion_geografica = ?',
+      [id_ubicacion_geografica]
+    );
+
+    // Registrar en el histórico
+    await registrarHistorico({
+      idUbicacion: id_ubicacion_geografica,
+      nombreUsuario: usuario?.nombreCompleto || 'Sistema',
+      tipoOperacion: 'ACTUALIZAR',
+      nombreElemento: lugarNombre?.nombre_lugar || body.nombre_lugar || 'Sin nombre'
+    });
 
     return NextResponse.json({ success: true });
   } catch (err) {

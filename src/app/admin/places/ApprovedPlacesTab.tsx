@@ -374,6 +374,25 @@ export default function ApprovedPlacesTab() {
                 <td>
                   <div style={{ display: 'inline-flex', gap: '8px' }}>
                     <Link
+                      href={`/admin/places/view/${lugar.id_lugar}`}
+                      passHref
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
+                        textDecoration: 'none',
+                        borderBottom: 'none'
+                      }}
+                      aria-label="Ver"
+                      title="Ver detalles"
+                    >
+                      <i className="uc-icon" style={{ fontSize: 22, color: '#00AA00' }}>description</i>
+                    </Link>
+                    <Link
                       href={`/admin/places/editar/${lugar.id_lugar}?tab=tab-02`}
                       passHref
                       style={{

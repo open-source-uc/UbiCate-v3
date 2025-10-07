@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "node:path";
 import { query } from "../../../lib/db";
+import { registrarHistorico } from "@/app/lib/auditLog";
+import { obtenerUsuarioAutenticado } from "@/app/lib/auth";
 import type * as GeoJSON from "geojson";
 
 async function readSQL(file: string) {
@@ -153,6 +155,15 @@ export async function POST(req: NextRequest) {
     }
 
     query.run("COMMIT");
+
+    // Obtener usuario autenticado y registrar en el histórico
+    const usuario = await obtenerUsuarioAutenticado();
+    await registrarHistorico({
+      idUbicacion: id_lugar,
+      nombreUsuario: usuario?.nombreCompleto || 'Usuario',
+      tipoOperacion: 'CREAR',
+      nombreElemento: punto.nombre || 'Sin nombre'
+    });
 
     return NextResponse.json({ id_lugar, id_punto_interes: lastPI.id_punto_interes }, { status: 201 });
 

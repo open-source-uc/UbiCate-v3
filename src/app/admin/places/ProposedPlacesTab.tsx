@@ -229,6 +229,16 @@ export default function ProposedPlacesTab() {
                 </button>
                 <button
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+                  aria-label="Ver"
+                  onClick={() => {
+                    window.location.href = `/admin/places/view/${lugar.id_lugar}`;
+                  }}
+                  title="Ver detalles"
+                >
+                  <i className="uc-icon" style={{ fontSize: 26, color: '#00AA00' }}>description</i>
+                </button>
+                <button
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
                   aria-label="Editar"
                   onClick={() => {
                     window.location.href = `/admin/places/editar/${lugar.id_lugar}?tab=tab-01`;
