@@ -5,6 +5,7 @@ import PlacesStep from "./PlacesStep";
 import { useEffect, useState } from "react";
 import SuggestStep from "./SuggestStep";
 import PlaceDetailStep from "./PlaceDetailStep";
+import RouteDetailStep from "./RouteDetailStep";
 import CommentStep from "./CommentStep";
 import { useSidebar } from "../../context/SidebarContext";
 
@@ -15,6 +16,7 @@ type SidebarStepsProps = {
 export default function SidebarSteps({ onClose }: SidebarStepsProps){
     const { step, setQueryParam, clearQueryParams } = useSidebar();
     const [placeData, setPlaceData] = useState();
+    const [routeData, setRouteData] = useState();
 
 
     useEffect(() => {
@@ -22,6 +24,13 @@ export default function SidebarSteps({ onClose }: SidebarStepsProps){
         const h = (e: any) => { setPlaceData(e.detail); setQueryParam("menu", "PlaceDetailStep"); };
         window.addEventListener("place:open-in-sidebar", h as any);
         return () => window.removeEventListener("place:open-in-sidebar", h as any);
+    }, []);
+
+    useEffect(() => {
+        clearQueryParams();
+        const h = (e: any) => { setRouteData(e.detail); setQueryParam("menu", "RouteDetailStep"); };
+        window.addEventListener("route:open-in-sidebar", h as any);
+        return () => window.removeEventListener("route:open-in-sidebar", h as any);
     }, []);
 
     useEffect(() => {
@@ -42,6 +51,8 @@ export default function SidebarSteps({ onClose }: SidebarStepsProps){
             return <SuggestStep />;
         case "PlaceDetailStep":
             return <PlaceDetailStep data={placeData} />;
+        case "RouteDetailStep":
+            return <RouteDetailStep data={routeData} />;
         case "CommentStep":
             return <CommentStep />;
         default:

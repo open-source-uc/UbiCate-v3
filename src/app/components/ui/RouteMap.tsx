@@ -41,9 +41,16 @@ export default function RouteMap() {
 
     // Si ya hay un mapa, destrúyelo antes de crear uno nuevo
     if (map.current) {
-      map.current.remove();
+      try {
+        map.current.remove();
+      } catch (error) {
+        console.warn("Error removing previous map:", error);
+      }
       map.current = null;
     }
+
+    // Variable para rastrear si el componente está montado
+    let isMounted = true;
 
     try {
       // Verificar que tengamos la API key
@@ -66,11 +73,13 @@ export default function RouteMap() {
       map.current = mapInstance;
 
       mapInstance.on("load", () => {
+        if (!isMounted) return;
+        
         try {
           // Esperar a que el estilo se cargue completamente
           if (!mapInstance.isStyleLoaded()) {
             mapInstance.once("styledata", () => {
-              setupMapContent(mapInstance);
+              if (isMounted) setupMapContent(mapInstance);
             });
             return;
           }
@@ -83,22 +92,27 @@ export default function RouteMap() {
 
       // Función para configurar el contenido del mapa
       const setupMapContent = (mapInstance: mapboxgl.Map) => {
+        if (!isMounted) return;
+        
         try {
           // Verificar que el mapa esté listo
-          if (!mapInstance || !mapInstance.isStyleLoaded()) {
+          if (!mapInstance || !mapInstance.getStyle || !mapInstance.isStyleLoaded || !mapInstance.isStyleLoaded()) {
             console.warn("Map not ready, skipping content setup");
             return;
           }
 
           // Dibujar rutas usando MapManager
-          if (routeGeojson && routeGeojson.features.length > 0) {
+          if (routeGeojson && routeGeojson.features && routeGeojson.features.length > 0) {
             // Pequeño delay para asegurar que el mapa esté completamente listo
             setTimeout(() => {
+              if (!isMounted) return;
               try {
-                MapManager.drawRoutes(mapInstance, routeGeojson, {
-                  fit: true,
-                  showEndpoints: true
-                });
+                if (mapInstance && mapInstance.isStyleLoaded && mapInstance.isStyleLoaded()) {
+                  MapManager.drawRoutes(mapInstance, routeGeojson, {
+                    fit: true,
+                    showEndpoints: true
+                  });
+                }
               } catch (error) {
                 console.error("Error drawing routes:", error);
               }
@@ -108,7 +122,13 @@ export default function RouteMap() {
           // Dibujar lugares usando MapManager
           if (placesGeojson && placesGeojson.length > 0) {
             setTimeout(() => {
+              if (!isMounted) return;
               try {
+                // Verificar que el mapa siga válido
+                if (!mapInstance || !mapInstance.isStyleLoaded || !mapInstance.isStyleLoaded()) {
+                  return;
+                }
+
                 // Filtrar lugares válidos y convertir a FeatureCollection
                 const validPlaces = placesGeojson.filter(place => 
                   place && 
@@ -139,6 +159,7 @@ export default function RouteMap() {
       });
 
       return () => {
+        isMounted = false;
         if (map.current) {
           // Limpiar capas de MapManager antes de destruir el mapa
           try {

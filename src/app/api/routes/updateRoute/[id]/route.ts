@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'node:path';
 import { query } from '@/app/lib/db';
+import { registrarHistoricoRuta } from '@/app/lib/auditLog';
+import { obtenerUsuarioAutenticado } from '@/app/lib/auth';
 
 export async function PUT(
   request: NextRequest,
@@ -81,6 +83,18 @@ export async function PUT(
           query.run(insertLugarRutaSQL, [placeId, routeId]);
         }
       }
+
+      // Obtener usuario autenticado
+      const usuario = await obtenerUsuarioAutenticado();
+      const nombreUsuario = usuario?.nombreCompleto || 'Sistema';
+
+      // Registrar en histórico
+      await registrarHistoricoRuta({
+        idRuta: routeId,
+        nombreUsuario,
+        tipoOperacion: 'ACTUALIZAR',
+        nombreRuta: nombre_ruta
+      });
 
       return NextResponse.json({
         message: 'Ruta actualizada exitosamente',

@@ -6,6 +6,7 @@ import Map from "./components/ui/Map";
 import { MapProvider } from "./components/context/MapContext";
 import Header from "./components/layout/Header";
 import { SidebarProvider } from "./components/context/SidebarContext";
+import FloatingRouteDetailsButton from "./components/ui/FloatingRouteDetailsButton";
 import { Suspense } from "react";
 
 export default function Page() {
@@ -18,6 +19,7 @@ export default function Page() {
               <SidebarDesktop />
               <main className="map-area">
                 <Map />
+                <FloatingRouteDetailsButton />
               </main>
             </div>
           </div>

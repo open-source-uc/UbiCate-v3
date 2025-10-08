@@ -294,8 +294,10 @@ export default function EditarRutaPage() {
     
     const routeWithColors = {
       ...route,
-      color: MapUtils.routeIdToColor(route.id_ruta.toString()),
-      icon: MapUtils.routeIdToIcon(route.id_ruta)
+      // Use color from form if available, otherwise use default from MapUtils
+      color: formData.color_icono && formData.color_icono.trim() ? formData.color_icono : MapUtils.routeIdToColor(route.id_ruta.toString()),
+      // Use icon from form if available, otherwise use default from MapUtils
+      icon: formData.icono && formData.icono.trim() ? formData.icono : MapUtils.routeIdToIcon(route.id_ruta)
     };
 
     // Use GeoJSON from form if it's been modified, otherwise use original
@@ -324,7 +326,7 @@ export default function EditarRutaPage() {
     }
 
     return routeWithColors;
-  }, [route, formData.geojson]);
+  }, [route, formData.geojson, formData.color_icono, formData.icono]);
 
   const enrichGeojsonFeatures = (route: RouteWithGeo | null, places: Place[]) => {
     const placesGeojsonRaw = places.map((place: Place) => (place as any).featureCollection || place.geojson).filter(Boolean);

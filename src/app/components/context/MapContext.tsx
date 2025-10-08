@@ -28,6 +28,7 @@ type MapContextType = {
   places: Place[];
   routes: RouteWithGeo[];
   campusData: CampusWithGeo[];
+  activeRoute: RouteWithGeo | null;
   flyToCampus: (campus: number) => void;
   showPlaces: (placeTypeId: number) => void;
   showRoute: (routeId: number) => void;
@@ -50,6 +51,7 @@ export const MapProvider = ({ children }: { children: React.ReactNode }) => {
   const [places, setPlaces] = useState<PlaceWithGeo[]>([]);
   const [routes, setRoutes] = useState<RouteWithGeo[]>([]);
   const [currentCampus, setCurrentCampus] = useState<CampusWithGeo | null>(null);
+  const [activeRoute, setActiveRoute] = useState<RouteWithGeo | null>(null);
   
   // Loading states to prevent duplicate API calls
   const loadingStatesRef = useRef({
@@ -244,14 +246,19 @@ const showRoute = (routeId: number) => {
   const route = routes.find(r => r.id_ruta === routeId);
   if (!route) {
     console.warn(`[showRoute] Ruta ${routeId} no encontrada en el campus actual`);
+    setActiveRoute(null);
     return;
   }
 
   // Verificar que la ruta pertenece al campus actual
   if (currentCampus && route.id_campus !== currentCampus.id_campus) {
     console.warn(`[showRoute] Ruta ${routeId} no pertenece al campus actual ${currentCampus.id_campus}`);
+    setActiveRoute(null);
     return;
   }
+
+  // Guardar la ruta activa
+  setActiveRoute(route);
 
   // 🔵 toma SOLO las líneas del FC, SIN modificar coordenadas
   const fc = toFC(route.featureCollection);
@@ -367,6 +374,7 @@ const showRoute = (routeId: number) => {
         places, 
         placeNames, 
         campusData, 
+        activeRoute,
         flyToCampus, 
         showRoute,
         showPlaces }}>

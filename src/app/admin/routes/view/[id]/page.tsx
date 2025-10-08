@@ -16,8 +16,11 @@ import AdminPageContainer from "../../../../components/ui/admin/AdminPageContain
 export default function ViewRoutePage() {
   const [route, setRoute] = useState<RouteWithGeo | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
+  const [historico, setHistorico] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10; // Mostrar 10 registros por página en el histórico
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string | undefined;
@@ -74,6 +77,20 @@ export default function ViewRoutePage() {
         );
         setPlaces(routePlaces);
       }
+
+      // Obtener histórico de la ruta
+      try {
+        const historicoResponse = await fetch(`/api/routes/historico?id_ruta=${id}`);
+        if (historicoResponse.ok) {
+          const historicoData = await historicoResponse.json();
+          if (historicoData.success) {
+            setHistorico(historicoData.data);
+          }
+        }
+      } catch (err) {
+        console.error("Error cargando histórico:", err);
+        // No bloqueamos la carga de la ruta si falla el histórico
+      }
     } catch (error) {
       console.error("Error al cargar detalles de la ruta:", error);
       setError("Error al cargar los datos de la ruta");
@@ -112,6 +129,38 @@ export default function ViewRoutePage() {
 
     return () => instances.forEach((i) => i.destroy());
   }, [loading]);
+
+  const formatearFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleString("es-CL", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
+  const getOperacionColor = (operacion: string) => {
+    const colores: Record<string, string> = {
+      CREAR: "#10B981",
+      ACTUALIZAR: "#3B82F6",
+      ELIMINAR: "#EF4444",
+      APROBAR: "#059669",
+      RECHAZAR: "#F97316"
+    };
+    return colores[operacion] || "#6B7280";
+  };
+
+  const getOperacionIcon = (operacion: string) => {
+    const iconos: Record<string, string> = {
+      CREAR: "add_circle",
+      ACTUALIZAR: "edit",
+      ELIMINAR: "delete",
+      APROBAR: "check_circle",
+      RECHAZAR: "cancel"
+    };
+    return iconos[operacion] || "info";
+  };
 
 
 
@@ -396,6 +445,235 @@ export default function ViewRoutePage() {
           <p style={{ color: "#999", margin: 0 }}>Esta ruta no tiene lugares asociados actualmente.</p>
         </div>
       )}
+
+      {/* Histórico de Cambios */}
+      <div style={{ 
+        backgroundColor: "#fff", 
+        borderRadius: "12px", 
+        padding: "2rem",
+        marginTop: "2rem",
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+        border: "1px solid #e0e0e0"
+      }}>
+        <h3 style={{ color: "#0176DE", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "8px" }}>
+          <i className="uc-icon">history</i>
+          Histórico de Cambios {historico.length > 0 && `(${historico.length})`}
+        </h3>
+        
+        {historico.length === 0 ? (
+          <div style={{ 
+            textAlign: "center", 
+            padding: "48px 24px", 
+            color: "#6B7280",
+            background: "#F9FAFB",
+            borderRadius: "8px"
+          }}>
+            <i className="uc-icon" style={{ fontSize: "48px", color: "#D1D5DB", marginBottom: "12px" }}>history</i>
+            <p style={{ margin: 0, fontSize: "16px" }}>No hay cambios registrados para esta ruta</p>
+          </div>
+        ) : (
+          <>
+            {/* Tabla de histórico */}
+            <div style={{ overflowX: "auto" }}>
+              <table className="uc-table" style={{ width: "100%" }}>
+                <thead>
+                  <tr>
+                    <th style={{ width: "50px", textAlign: "center" }}>Tipo</th>
+                    <th style={{ width: "180px" }}>Usuario</th>
+                    <th>Mensaje</th>
+                    <th style={{ width: "180px" }}>Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(() => {
+                    const paginatedHistorico = historico.slice(
+                      (currentPage - 1) * pageSize,
+                      currentPage * pageSize
+                    );
+                    
+                    return (
+                      <>
+                        {paginatedHistorico.map((item) => (
+                          <tr key={item.id_historico_ruta}>
+                            {/* Tipo de operación con ícono */}
+                            <td style={{ textAlign: "center" }}>
+                              <span
+                                className="material-icons"
+                                style={{
+                                  color: getOperacionColor(item.tipo_operacion),
+                                  fontSize: "24px",
+                                  verticalAlign: "middle"
+                                }}
+                                title={item.tipo_operacion}
+                              >
+                                {getOperacionIcon(item.tipo_operacion)}
+                              </span>
+                            </td>
+
+                            {/* Usuario */}
+                            <td>
+                              <strong>{item.nombre_usuario}</strong>
+                              <br />
+                              <small
+                                style={{
+                                  color: "#6B7280",
+                                  fontSize: "12px",
+                                  padding: "2px 8px",
+                                  background: getOperacionColor(item.tipo_operacion) + "20",
+                                  borderRadius: "4px",
+                                  display: "inline-block",
+                                  marginTop: "4px"
+                                }}
+                              >
+                                {item.tipo_operacion}
+                              </small>
+                            </td>
+
+                            {/* Mensaje */}
+                            <td>{item.mensaje}</td>
+
+                            {/* Fecha */}
+                            <td>
+                              <span style={{ color: "#6B7280", fontSize: "14px" }}>
+                                {formatearFecha(item.fecha)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                        
+                        {/* Filas vacías para completar la página */}
+                        {Array.from({ length: Math.max(0, pageSize - paginatedHistorico.length) }).map((_, index) => (
+                          <tr key={`empty-${index}`} style={{ height: "60px" }}>
+                            <td colSpan={4} style={{ borderBottom: "1px solid #E5E7EB" }}>&nbsp;</td>
+                          </tr>
+                        ))}
+                      </>
+                    );
+                  })()}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Paginación */}
+            {Math.ceil(historico.length / pageSize) > 1 && (
+              <nav className="uc-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '24px 0' }}>
+                <button
+                  className="uc-pagination_prev mr-12"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  aria-label="Anterior"
+                >
+                  <i className="uc-icon">keyboard_arrow_left</i>
+                </button>
+                <ul className="uc-pagination_pages" style={{ display: 'flex', alignItems: 'center', gap: '4px', listStyle: 'none', margin: 0, padding: 0 }}>
+                  {(() => {
+                    const totalPages = Math.ceil(historico.length / pageSize);
+                    return (
+                      <>
+                        {/* Primera página */}
+                        <li className={`page-item${currentPage === 1 ? ' active' : ''}`}>
+                          <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(1); }}>1</a>
+                        </li>
+                        
+                        {/* Páginas intermedias */}
+                        {currentPage > 3 && totalPages > 5 && (
+                          <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
+                        )}
+                        
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter(page => page !== 1 && page !== totalPages && Math.abs(page - currentPage) <= 1)
+                          .map((page, idx) => (
+                            <li key={page + '-' + idx} className={`page-item${currentPage === page ? ' active' : ''}`}>
+                              <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(page); }}>{page}</a>
+                            </li>
+                          ))}
+                        
+                        {currentPage < totalPages - 2 && totalPages > 5 && (
+                          <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
+                        )}
+                        
+                        {/* Última página */}
+                        {totalPages > 1 && (
+                          <li className={`page-item${currentPage === totalPages ? ' active' : ''}`}>
+                            <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(totalPages); }}>{totalPages}</a>
+                          </li>
+                        )}
+                      </>
+                    );
+                  })()}
+                </ul>
+                <button
+                  className="uc-pagination_next ml-12"
+                  disabled={currentPage === Math.ceil(historico.length / pageSize)}
+                  onClick={() => setCurrentPage(p => Math.min(Math.ceil(historico.length / pageSize), p + 1))}
+                  aria-label="Siguiente"
+                >
+                  <i className="uc-icon">keyboard_arrow_right</i>
+                </button>
+              </nav>
+            )}
+
+            {/* Estadísticas */}
+            <div style={{ 
+              marginTop: "16px", 
+              padding: "12px", 
+              background: "#F9FAFB", 
+              borderRadius: "8px",
+              display: "flex",
+              gap: "24px",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              fontSize: "14px",
+              color: "#6B7280"
+            }}>
+              {(() => {
+                const stats = {
+                  CREAR: historico.filter(h => h.tipo_operacion === 'CREAR').length,
+                  ACTUALIZAR: historico.filter(h => h.tipo_operacion === 'ACTUALIZAR').length,
+                  ELIMINAR: historico.filter(h => h.tipo_operacion === 'ELIMINAR').length,
+                  APROBAR: historico.filter(h => h.tipo_operacion === 'APROBAR').length,
+                  RECHAZAR: historico.filter(h => h.tipo_operacion === 'RECHAZAR').length,
+                };
+                
+                return (
+                  <>
+                    {stats.CREAR > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span className="material-icons" style={{ fontSize: "16px", color: "#10B981" }}>add_circle</span>
+                        <span><strong>{stats.CREAR}</strong> Creación{stats.CREAR !== 1 ? 'es' : ''}</span>
+                      </div>
+                    )}
+                    {stats.ACTUALIZAR > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span className="material-icons" style={{ fontSize: "16px", color: "#3B82F6" }}>edit</span>
+                        <span><strong>{stats.ACTUALIZAR}</strong> Actualización{stats.ACTUALIZAR !== 1 ? 'es' : ''}</span>
+                      </div>
+                    )}
+                    {stats.APROBAR > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span className="material-icons" style={{ fontSize: "16px", color: "#059669" }}>check_circle</span>
+                        <span><strong>{stats.APROBAR}</strong> Aprobación{stats.APROBAR !== 1 ? 'es' : ''}</span>
+                      </div>
+                    )}
+                    {stats.RECHAZAR > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span className="material-icons" style={{ fontSize: "16px", color: "#F97316" }}>cancel</span>
+                        <span><strong>{stats.RECHAZAR}</strong> Rechazo{stats.RECHAZAR !== 1 ? 's' : ''}</span>
+                      </div>
+                    )}
+                    {stats.ELIMINAR > 0 && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span className="material-icons" style={{ fontSize: "16px", color: "#EF4444" }}>delete</span>
+                        <span><strong>{stats.ELIMINAR}</strong> Eliminación{stats.ELIMINAR !== 1 ? 'es' : ''}</span>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          </>
+        )}
+      </div>
 
       <style jsx>{`
         .results-table {

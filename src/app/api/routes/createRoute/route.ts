@@ -2,6 +2,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from "@/app/lib/db";
+import { registrarHistoricoRuta } from "@/app/lib/auditLog";
+import { obtenerUsuarioAutenticado } from "@/app/lib/auth";
 
 export const runtime = 'nodejs';
 
@@ -99,6 +101,18 @@ export async function POST(request: NextRequest) {
     });
 
     console.log("Transaction completed, ruta ID:", result);
+
+    // Obtener usuario autenticado
+    const usuario = await obtenerUsuarioAutenticado();
+    const nombreUsuario = usuario?.nombreCompleto || 'Sistema';
+
+    // Registrar en histórico
+    await registrarHistoricoRuta({
+      idRuta: result,
+      nombreUsuario,
+      tipoOperacion: 'CREAR',
+      nombreRuta: nombre_ruta
+    });
 
     return NextResponse.json({ 
       success: true, 
