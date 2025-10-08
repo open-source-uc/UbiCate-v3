@@ -107,7 +107,7 @@ export default function RouteMap() {
             setTimeout(() => {
               if (!isMounted) return;
               try {
-                if (mapInstance && mapInstance.isStyleLoaded && mapInstance.isStyleLoaded()) {
+                if (mapInstance && mapInstance.isStyleLoaded()) {
                   MapManager.drawRoutes(mapInstance, routeGeojson, {
                     fit: true,
                     showEndpoints: true
@@ -121,15 +121,25 @@ export default function RouteMap() {
 
           // Dibujar lugares usando MapManager
           if (placesGeojson && placesGeojson.length > 0) {
-            setTimeout(() => {
+            // Función con reintentos para esperar a que el mapa esté listo
+            const tryDrawPlaces = (attempt = 0) => {
+              const maxAttempts = 20; // Máximo 2 segundos (20 x 100ms)
+              
               if (!isMounted) return;
+
+              if (attempt >= maxAttempts) {
+                console.error('[RouteMap] Timeout: El mapa no se cargó después de', maxAttempts * 100, 'ms');
+                return;
+              }
+
               try {
-                // Verificar que el mapa siga válido
-                if (!mapInstance || !mapInstance.isStyleLoaded || !mapInstance.isStyleLoaded()) {
+                // Verificar que el mapa esté listo
+                if (!mapInstance || !mapInstance.isStyleLoaded()) {
+                  setTimeout(() => tryDrawPlaces(attempt + 1), 100);
                   return;
                 }
-
-                // Filtrar lugares válidos y convertir a FeatureCollection
+                
+                // Filtrar lugares válidos
                 const validPlaces = placesGeojson.filter(place => 
                   place && 
                   place.type === 'FeatureCollection' && 
@@ -140,14 +150,17 @@ export default function RouteMap() {
                 if (validPlaces.length > 0) {
                   MapManager.drawPlaces(mapInstance, validPlaces, {
                     mode: "multi",
-                    zoom: false, // No hacer zoom a lugares, ya lo hizo la ruta
+                    zoom: false,
                     showPolygonLabels: true
                   });
                 }
               } catch (error) {
-                console.error("Error drawing places:", error);
+                console.error("[RouteMap] Error drawing places:", error);
               }
-            }, 200);
+            };
+            
+            // Iniciar el proceso con un pequeño delay inicial
+            setTimeout(() => tryDrawPlaces(), 100);
           }
         } catch (error) {
           console.error("Error in setupMapContent:", error);
