@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/app/lib/db";
+import { registrarHistoricoRuta } from "@/app/lib/auditLog";
+import { obtenerUsuarioAutenticado } from "@/app/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -26,6 +28,24 @@ export async function POST(request: NextRequest) {
     `;
 
     query.run(updateSql, [id_ruta]);
+
+    // Obtener nombre de la ruta para el histórico
+    const rutaInfo = query.get<{ nombre_ruta: string }>(
+      "SELECT nombre_ruta FROM ruta WHERE id_ruta = ?",
+      [id_ruta]
+    );
+
+    // Obtener usuario autenticado
+    const usuario = await obtenerUsuarioAutenticado();
+    const nombreUsuario = usuario?.nombreCompleto || 'Sistema';
+
+    // Registrar en histórico como DEVOLVER A CONSTRUCCIÓN
+    await registrarHistoricoRuta({
+      idRuta: id_ruta,
+      nombreUsuario,
+      tipoOperacion: 'DEVOLVER A CONSTRUCCIÓN',
+      nombreRuta: rutaInfo?.nombre_ruta || 'Ruta sin nombre'
+    });
 
     return NextResponse.json({ 
       success: true, 

@@ -7,11 +7,13 @@ import type { Place } from "@/app/types/placeType";
 import type { RouteWithGeo } from "@/app/types/routeType";
 import { marked } from "marked";
 import { useSidebar } from "../../context/SidebarContext";
+import { useMap } from "../../context/MapContext";
 
 export default function RouteDetailStep({ data }: StepProps) {
   const [route, setRoute] = useState<RouteWithGeo | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
   const { clearQueryParams } = useSidebar();
+  const { setActiveRoute, mapRef } = useMap();
 
   useEffect(() => {
     if (!data?.routeId) return;
@@ -52,7 +54,21 @@ export default function RouteDetailStep({ data }: StepProps) {
   }
 
   function handleStepBack() {
+    // Limpiar la visualización de la ruta y los lugares en el mapa
+    const map = mapRef.current;
+    if (map) {
+      // Limpiar la ruta
+      if ((map as any).__removeRoutes) {
+        (map as any).__removeRoutes();
+      }
+      // Limpiar los lugares/puntos asociados
+      if ((map as any).__removePlacesPolygons) {
+        (map as any).__removePlacesPolygons();
+      }
+    }
+    
     data?.__removeRoute?.();
+    setActiveRoute(null); // Limpiar la ruta activa y ocultar el botón flotante
     clearQueryParams();
   }
 
@@ -183,8 +199,6 @@ export default function RouteDetailStep({ data }: StepProps) {
               padding: "12px", 
               borderRadius: "8px",
               border: "1px solid #e9ecef",
-              maxHeight: "200px",
-              overflowY: "auto",
               fontSize: "0.95rem"
             }}
             dangerouslySetInnerHTML={{ __html: marked(route.descripcion) }}
@@ -203,8 +217,6 @@ export default function RouteDetailStep({ data }: StepProps) {
             display: "flex", 
             flexDirection: "column", 
             gap: "8px",
-            maxHeight: "300px",
-            overflowY: "auto",
             backgroundColor: "#f8f9fa",
             padding: "12px",
             borderRadius: "8px",

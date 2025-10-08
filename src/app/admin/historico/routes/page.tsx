@@ -34,7 +34,7 @@ export default function HistoricoRutasPage() {
   const pageSize = 15;
 
   // Todas las operaciones posibles
-  const todasOperaciones: string[] = ['Crear', 'Actualizar', 'Eliminar', 'Aprobar', 'Rechazar'];
+  const todasOperaciones: string[] = ['Crear', 'Actualizar', 'Eliminar', 'Aprobar', 'Devolver a Construcción'];
   
   // Extraer usuarios únicos del histórico
   const usuarios = Array.from(new Set(historico.map(h => h.nombre_usuario))).filter(Boolean).sort();
@@ -109,7 +109,8 @@ export default function HistoricoRutasPage() {
       ACTUALIZAR: "#3B82F6", // Azul
       ELIMINAR: "#EF4444",   // Rojo
       APROBAR: "#059669",    // Verde oscuro
-      RECHAZAR: "#F97316"    // Naranja
+      RECHAZAR: "#F97316",   // Naranja
+      "DEVOLVER A CONSTRUCCIÓN": "#FEC60D" // Amarillo (mismo color del icono construction)
     };
     return colores[operacion] || "#6B7280";
   };
@@ -120,7 +121,8 @@ export default function HistoricoRutasPage() {
       ACTUALIZAR: "edit",
       ELIMINAR: "delete",
       APROBAR: "check_circle",
-      RECHAZAR: "cancel"
+      RECHAZAR: "cancel",
+      "DEVOLVER A CONSTRUCCIÓN": "construction"
     };
     return iconos[operacion] || "info";
   };
@@ -139,7 +141,7 @@ export default function HistoricoRutasPage() {
   if (error) return <AdminPageContainer title="Histórico de Rutas"><p style={{ color: "#EF4444" }}>Error: {error}</p></AdminPageContainer>;
 
   return (
-    <AdminPageContainer title="Histórico de Rutas">
+    <AdminPageContainer title="Historial de Cambios de Rutas">
       <div style={{ overflowX: "auto" }}>
         {/* Filtros y búsqueda */}
         <div className="mb-24">
@@ -439,52 +441,50 @@ export default function HistoricoRutasPage() {
         </div>
 
         {/* Paginación */}
-        {totalPages > 1 && (
-          <nav className="uc-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '24px 0' }}>
-            <button
-              className="uc-pagination_prev mr-12"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              aria-label="Anterior"
-            >
-              <i className="uc-icon">keyboard_arrow_left</i>
-            </button>
-            <ul className="uc-pagination_pages" style={{ display: 'flex', alignItems: 'center', gap: '4px', listStyle: 'none', margin: 0, padding: 0 }}>
-              {/* Primera página */}
-              <li className={`page-item${currentPage === 1 ? ' active' : ''}`}>
-                <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(1); }}>1</a>
-              </li>
-              {/* Páginas intermedias */}
-              {currentPage > 3 && totalPages > 5 && (
-                <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
-              )}
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(page => page !== 1 && page !== totalPages && Math.abs(page - currentPage) <= 1)
-                .map((page, idx) => (
-                  <li key={page + '-' + idx} className={`page-item${currentPage === page ? ' active' : ''}`}>
-                    <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(page); }}>{page}</a>
-                  </li>
-                ))}
-              {currentPage < totalPages - 2 && totalPages > 5 && (
-                <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
-              )}
-              {/* Última página */}
-              {totalPages > 1 && (
-                <li className={`page-item${currentPage === totalPages ? ' active' : ''}`}>
-                  <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(totalPages); }}>{totalPages}</a>
+        <nav className="uc-pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '24px 0' }}>
+          <button
+            className="uc-pagination_prev mr-12"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            aria-label="Anterior"
+          >
+            <i className="uc-icon">keyboard_arrow_left</i>
+          </button>
+          <ul className="uc-pagination_pages" style={{ display: 'flex', alignItems: 'center', gap: '4px', listStyle: 'none', margin: 0, padding: 0 }}>
+            {/* Primera página */}
+            <li className={`page-item${currentPage === 1 ? ' active' : ''}`}>
+              <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(1); }}>1</a>
+            </li>
+            {/* Páginas intermedias */}
+            {totalPages > 1 && currentPage > 3 && totalPages > 5 && (
+              <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
+            )}
+            {totalPages > 1 && Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(page => page !== 1 && page !== totalPages && Math.abs(page - currentPage) <= 1)
+              .map((page, idx) => (
+                <li key={page + '-' + idx} className={`page-item${currentPage === page ? ' active' : ''}`}>
+                  <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(page); }}>{page}</a>
                 </li>
-              )}
-            </ul>
-            <button
-              className="uc-pagination_next ml-12"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              aria-label="Siguiente"
-            >
-              <i className="uc-icon">keyboard_arrow_right</i>
-            </button>
-          </nav>
-        )}
+              ))}
+            {totalPages > 1 && currentPage < totalPages - 2 && totalPages > 5 && (
+              <li className="page-item"><a href="#" className="page-link" onClick={e => e.preventDefault()}>...</a></li>
+            )}
+            {/* Última página */}
+            {totalPages > 1 && (
+              <li className={`page-item${currentPage === totalPages ? ' active' : ''}`}>
+                <a href="#" className="page-link" onClick={e => { e.preventDefault(); setCurrentPage(totalPages); }}>{totalPages}</a>
+              </li>
+            )}
+          </ul>
+          <button
+            className="uc-pagination_next ml-12"
+            disabled={currentPage === totalPages || totalPages <= 1}
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            aria-label="Siguiente"
+          >
+            <i className="uc-icon">keyboard_arrow_right</i>
+          </button>
+        </nav>
 
         {/* Estadísticas */}
         <div style={{ 
@@ -513,6 +513,7 @@ export default function HistoricoRutasPage() {
                 ELIMINAR: historico.filter(h => h.tipo_operacion === 'ELIMINAR').length,
                 APROBAR: historico.filter(h => h.tipo_operacion === 'APROBAR').length,
                 RECHAZAR: historico.filter(h => h.tipo_operacion === 'RECHAZAR').length,
+                "DEVOLVER A CONSTRUCCIÓN": historico.filter(h => h.tipo_operacion === 'DEVOLVER A CONSTRUCCIÓN').length,
               };
               
               return (
@@ -537,6 +538,12 @@ export default function HistoricoRutasPage() {
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <span className="material-icons" style={{ fontSize: "16px", color: "#059669" }}>check_circle</span>
                       <span><strong>{stats.APROBAR}</strong> {stats.APROBAR === 1 ? 'Aprobación' : 'Aprobaciones'}</span>
+                    </div>
+                  )}
+                  {stats["DEVOLVER A CONSTRUCCIÓN"] > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span className="material-icons" style={{ fontSize: "16px", color: "#FEC60D" }}>construction</span>
+                      <span><strong>{stats["DEVOLVER A CONSTRUCCIÓN"]}</strong> {stats["DEVOLVER A CONSTRUCCIÓN"] === 1 ? 'Devolución a Construcción' : 'Devoluciones a Construcción'}</span>
                     </div>
                   )}
                   {stats.RECHAZAR > 0 && (

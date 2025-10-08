@@ -9,7 +9,8 @@ export default function FloatingRouteDetailsButton() {
     return null;
   }
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
     // Dispatch custom event to open route details in sidebar
     const event = new CustomEvent("route:open-in-sidebar", {
       detail: {
@@ -26,52 +27,48 @@ export default function FloatingRouteDetailsButton() {
   const buttonColor = activeRoute.color_icono || "#2563eb";
 
   return (
-    <button
+    <a
+      href="#"
       onClick={handleClick}
-      className="floating-route-details-btn"
+      className="uc-btn btn-secondary floating-route-details-btn"
       title="Ver detalles de la ruta"
       aria-label="Ver detalles de la ruta"
     >
-      <span className="material-icons">info</span>
+      Ver Detalles de la Ruta
+      <i className="uc-icon" style={{ marginLeft: '8px' }}>visibility</i>
       
       <style jsx>{`
         .floating-route-details-btn {
           position: absolute;
-          top: 20px;
-          right: 20px;
-          width: 56px;
-          height: 56px;
-          border-radius: 50%;
-          background-color: ${buttonColor};
-          color: white;
-          border: none;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: ${buttonColor} !important;
+          color: white !important;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-          transition: all 0.3s ease;
           z-index: 1000;
+          transition: all 0.3s ease;
+          white-space: nowrap;
         }
 
         .floating-route-details-btn:hover {
-          transform: scale(1.1);
+          background-color: ${buttonColor} !important;
+          opacity: 0.9;
+          transform: translateX(-50%) scale(1.05);
           box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
         }
 
         .floating-route-details-btn:active {
-          transform: scale(0.95);
+          transform: translateX(-50%) scale(0.98);
         }
 
         /* Móvil: ajustar posición */
         @media (max-width: 991.98px) {
           .floating-route-details-btn {
-            top: 16px;
-            right: 16px;
+            bottom: 16px;
           }
         }
       `}</style>
-    </button>
+    </a>
   );
 }

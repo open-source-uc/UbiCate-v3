@@ -5,7 +5,7 @@
 
 import { query } from './db';
 
-export type TipoOperacion = 'CREAR' | 'ACTUALIZAR' | 'ELIMINAR' | 'APROBAR' | 'RECHAZAR';
+export type TipoOperacion = 'CREAR' | 'ACTUALIZAR' | 'ELIMINAR' | 'APROBAR' | 'RECHAZAR' | 'DEVOLVER A CONSTRUCCIÓN';
 
 interface RegistrarHistoricoParams {
   idUbicacion: number;
@@ -25,7 +25,8 @@ function generarMensaje(params: RegistrarHistoricoParams): string {
     ACTUALIZAR: `El usuario ${nombreUsuario} actualizó el punto "${nombreElemento}"`,
     ELIMINAR: `El usuario ${nombreUsuario} eliminó el punto "${nombreElemento}"`,
     APROBAR: `El usuario ${nombreUsuario} aprobó el punto "${nombreElemento}"`,
-    RECHAZAR: `El usuario ${nombreUsuario} rechazó el punto "${nombreElemento}"`
+    RECHAZAR: `El usuario ${nombreUsuario} rechazó el punto "${nombreElemento}"`,
+    'DEVOLVER A CONSTRUCCIÓN': `El usuario ${nombreUsuario} devolvió el punto "${nombreElemento}" a construcción`
   };
 
   return mensajes[tipoOperacion];
@@ -173,7 +174,8 @@ function generarMensajeRuta(params: RegistrarHistoricoRutaParams): string {
     ACTUALIZAR: `El usuario ${nombreUsuario} actualizó la ruta "${nombreRuta}"`,
     ELIMINAR: `El usuario ${nombreUsuario} eliminó la ruta "${nombreRuta}"`,
     APROBAR: `El usuario ${nombreUsuario} aprobó la ruta "${nombreRuta}"`,
-    RECHAZAR: `El usuario ${nombreUsuario} rechazó la ruta "${nombreRuta}"`
+    RECHAZAR: `El usuario ${nombreUsuario} rechazó la ruta "${nombreRuta}"`,
+    'DEVOLVER A CONSTRUCCIÓN': `El usuario ${nombreUsuario} devolvió la ruta "${nombreRuta}" a construcción`
   };
 
   return mensajes[tipoOperacion];

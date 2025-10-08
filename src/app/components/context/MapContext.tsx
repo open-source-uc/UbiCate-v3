@@ -29,6 +29,7 @@ type MapContextType = {
   routes: RouteWithGeo[];
   campusData: CampusWithGeo[];
   activeRoute: RouteWithGeo | null;
+  setActiveRoute: (route: RouteWithGeo | null) => void;
   flyToCampus: (campus: number) => void;
   showPlaces: (placeTypeId: number) => void;
   showRoute: (routeId: number) => void;
@@ -229,6 +230,7 @@ const placesFC: GeoJSON.FeatureCollection[] = filteredPlaces.map((p) => {
   return fc;
 });
 (map as any).__removeRoutes?.();
+setActiveRoute(null); // Limpiar ruta activa cuando se muestran lugares
 MapManager.drawPlaces(map, placesFC, { mode: "multi" });
 
   }
@@ -332,6 +334,7 @@ const showRoute = (routeId: number) => {
 
       // Limpiar rutas anteriores del mapa
       (map as any).__removeRoutes?.();
+      setActiveRoute(null); // Limpiar ruta activa al cambiar de campus
       (map as any).__removePlacesPolygons?.();
 
       const dataFC: unknown =
@@ -375,6 +378,7 @@ const showRoute = (routeId: number) => {
         placeNames, 
         campusData, 
         activeRoute,
+        setActiveRoute,
         flyToCampus, 
         showRoute,
         showPlaces }}>

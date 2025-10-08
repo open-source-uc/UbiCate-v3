@@ -10,7 +10,7 @@ export default function ProposedPlacesTab() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
-    action: "aprobar" | "rechazar";
+    action: "aprobar" | "eliminar";
     lugar: Place | null;
   }>({ action: "aprobar", lugar: null });
 
@@ -83,7 +83,7 @@ export default function ProposedPlacesTab() {
               width: "90%",
               maxWidth: 520,
               borderTop:
-                confirmAction.action === "rechazar"
+                confirmAction.action === "eliminar"
                   ? "4px solid #F24F4F"
                   : undefined,
             }}
@@ -121,11 +121,11 @@ export default function ProposedPlacesTab() {
                 )}
                 {confirmAction.action === "aprobar"
                   ? "Aprobar lugar"
-                  : "Rechazar lugar"}
+                  : "Eliminar lugar"}
               </h2>
               <p className="no-margin">
                 ¿Estás seguro de que deseas{" "}
-                {confirmAction.action === "aprobar" ? "aprobar" : "rechazar"} el
+                {confirmAction.action === "aprobar" ? "aprobar" : "eliminar"} el
                 lugar <strong>{confirmAction.lugar?.nombre_lugar}</strong>?
               </p>
               <div
@@ -139,7 +139,7 @@ export default function ProposedPlacesTab() {
                 <button
                   className="uc-btn btn-cta"
                   style={
-                    confirmAction.action === "rechazar"
+                    confirmAction.action === "eliminar"
                       ? {
                           backgroundColor: '#0176DE',
                           color: "#fff",
@@ -217,9 +217,9 @@ export default function ProposedPlacesTab() {
                 </button>
                 <button
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-                  aria-label="Rechazar"
+                  aria-label="Eliminar"
                   onClick={() => {
-                    setConfirmAction({ action: "rechazar", lugar });
+                    setConfirmAction({ action: "eliminar", lugar });
                     setModalOpen(true);
                   }}
                   title="Eliminar Lugar"

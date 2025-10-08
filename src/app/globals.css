@@ -17,10 +17,17 @@ body {
 aside {
   background-color: #ffffff;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, .18);
+  overflow-y: auto !important;
 }
 
 aside .nav {
   padding: 0 16px;
+}
+
+/* Eliminar scroll interno de los steps del sidebar */
+.uc-navbar-side {
+  overflow-y: visible !important;
+  overflow-x: visible !important;
 }
 
 /* ===================== LAYOUT ===================== */

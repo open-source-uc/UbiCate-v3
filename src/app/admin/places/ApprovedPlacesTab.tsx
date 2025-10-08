@@ -143,10 +143,10 @@ export default function ApprovedPlacesTab() {
         <div className="uc-message_body" style={{ textAlign: "center" }}>
           <h2 className="mb-24" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "8px" }}>
             <span className="material-icons" aria-hidden="true" style={{ color: "#F24F4F", fontSize: "28px" }}>close</span>
-            Rechazar lugar
+            Eliminar lugar
           </h2>
           <p className="no-margin">
-            ¿Estás seguro de que deseas rechazar el lugar <strong>{deleteTarget.nombre_lugar}</strong>?
+            ¿Estás seguro de que deseas eliminar el lugar <strong>{deleteTarget.nombre_lugar}</strong>?
           </p>
           <div style={{ display: "flex", justifyContent: "center", gap: "12px", marginTop: "24px" }}>
             <button

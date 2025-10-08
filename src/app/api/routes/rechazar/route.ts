@@ -39,11 +39,11 @@ export async function POST(request: NextRequest) {
     const usuario = await obtenerUsuarioAutenticado();
     const nombreUsuario = usuario?.nombreCompleto || 'Sistema';
 
-    // Registrar en histórico
+    // Registrar en histórico como ELIMINAR
     await registrarHistoricoRuta({
       idRuta: id_ruta,
       nombreUsuario,
-      tipoOperacion: 'RECHAZAR',
+      tipoOperacion: 'ELIMINAR',
       nombreRuta: rutaInfo?.nombre_ruta || 'Ruta sin nombre'
     });
 

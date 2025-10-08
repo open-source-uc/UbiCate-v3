@@ -31,11 +31,11 @@ export async function POST(req: NextRequest) {
       [id]
     );
 
-    // Registrar en el histórico
+    // Registrar en el histórico como ELIMINAR
     await registrarHistorico({
       idUbicacion: id,
       nombreUsuario: usuario.nombreCompleto,
-      tipoOperacion: 'RECHAZAR',
+      tipoOperacion: 'ELIMINAR',
       nombreElemento
     });
 
