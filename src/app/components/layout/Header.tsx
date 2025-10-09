@@ -259,7 +259,7 @@ export default function Header({ isAdmin = false }: HeaderProps) {
         )}
 
         {isAdmin ? (
-          <SidebarMobileAdmin open={openSidebar} onClose={() => setOpenSidebar(false)} topOffset={MOBILE_TOTAL} />
+          <SidebarMobileAdmin open={openSidebar} onClose={() => setOpenSidebar(false)} topOffset={MOBILE_TOTAL} setOpen={setOpenSidebar} />
         ) : (
           <SidebarMobile open={openSidebar} onClose={() => setOpenSidebar(false)} topOffset={MOBILE_TOTAL} setOpen={setOpenSidebar} />
         )}

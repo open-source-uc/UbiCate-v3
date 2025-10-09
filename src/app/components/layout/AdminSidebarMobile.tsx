@@ -28,7 +28,7 @@ export default function SidebarMobileAdmin({ open, onClose, topOffset, setOpen }
       window.removeEventListener('sidebar:open', onOpen as EventListener);
       window.removeEventListener('sidebar:close', onClose as EventListener);
     };
-  }, []);
+  }, [setOpen]);
 
   const drawerStyle: React.CSSProperties = {
     position: 'fixed',

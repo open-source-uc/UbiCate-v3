@@ -359,3 +359,8 @@ aside .nav {
 .mapboxgl-user-location-accuracy-circle {
   display: none !important;
 }
+
+/* Ocultar control de geolocalización de Mapbox cuando usamos nuestro propio botón flotante */
+.mapboxgl-ctrl-geolocate {
+  display: none !important;
+}

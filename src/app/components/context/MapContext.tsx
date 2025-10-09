@@ -33,6 +33,7 @@ type MapContextType = {
   flyToCampus: (campus: number) => void;
   showPlaces: (placeTypeId: number) => void;
   showRoute: (routeId: number) => void;
+  triggerGeolocate: () => void;
 };
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
@@ -97,6 +98,24 @@ useEffect(() => {
     mapRef.current = null;
   };
 }, []);
+
+  // Expose a trigger to programmatically invoke the GeolocateControl
+  const triggerGeolocate = useCallback(() => {
+    try {
+      if (geolocateRef.current && typeof (geolocateRef.current as any).trigger === 'function') {
+        (geolocateRef.current as any).trigger();
+        return;
+      }
+
+      // Fallback: if geolocate control not available, try to use map's locate options
+      const map = mapRef.current;
+      if (map && 'locate' in (map as any)) {
+        try { (map as any).locate(); } catch { /* ignore */ }
+      }
+    } catch (err) {
+      console.warn('[MapProvider] triggerGeolocate failed', err);
+    }
+  }, []);
 
 
   useEffect(() => {
@@ -369,7 +388,7 @@ const showRoute = (routeId: number) => {
   }, [loaded, campusData, flyToCampus]);
 
   return (
-    <MapContext.Provider value={{ 
+  <MapContext.Provider value={{ 
         mapRef, 
         mapContainer, 
         currentCampus, 
@@ -379,6 +398,7 @@ const showRoute = (routeId: number) => {
         campusData, 
         activeRoute,
         setActiveRoute,
+    triggerGeolocate,
         flyToCampus, 
         showRoute,
         showPlaces }}>
