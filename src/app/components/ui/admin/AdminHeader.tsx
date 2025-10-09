@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../../admin/auth-provider';
-import SidebarMobileAdmin from './AdminSidebarMobile';
+import SidebarMobileAdmin from '../../layout/AdminSidebarMobile';
 
 // CSS
 import '../css/admin-header-shared.css';
@@ -257,6 +257,7 @@ export default function AdminHeader() {
           <SidebarMobileAdmin
             open={showSidebar}
             onClose={() => setShowSidebar(false)}
+            setOpen={setShowSidebar}
             topOffset={MOBILE_TOTAL}
           />
         </div>

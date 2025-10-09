@@ -3,7 +3,7 @@
 import { ReactNode, Suspense } from 'react'
 import '../components/ui/css/admin.css'
 import Footer from '../components/layout/Footer'
-import AdminSidebarDesktop from '../components/ui/admin/AdminSidebarDesktop'
+import AdminSidebarDesktop from '../components/layout/AdminSidebarDesktop'
 import { AuthProvider } from './auth-provider'
 import { UserProvider } from "@/app/components/context/userContext";
 import Header from '../components/layout/Header'

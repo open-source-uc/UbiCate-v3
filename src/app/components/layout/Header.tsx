@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import SidebarMobile from "./SidebarMobile";
-import SidebarMobileAdmin from "../ui/admin/AdminSidebarMobile";
+import SidebarMobileAdmin from "./AdminSidebarMobile";
 import { useAuth } from "../../admin/auth-provider";
 import "../ui/css/Header.css";
 
