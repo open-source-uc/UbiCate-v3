@@ -38,16 +38,34 @@ function generarMensaje(params: RegistrarHistoricoParams): string {
 export async function registrarHistorico(params: RegistrarHistoricoParams): Promise<void> {
   const mensaje = generarMensaje(params);
 
+  // Obtener la fecha/hora actual en zona horaria de Santiago de Chile
+  const fechaSantiago = new Date().toLocaleString('es-CL', {
+    timeZone: 'America/Santiago',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  
+  // Convertir de formato "DD-MM-YYYY, HH:mm:ss" a "YYYY-MM-DD HH:mm:ss" para SQLite
+  const [fecha, hora] = fechaSantiago.split(', ');
+  const [dia, mes, año] = fecha.split('-');
+  const fechaISO = `${año}-${mes}-${dia} ${hora}`;
+
   try {
     await query.run(
       `INSERT INTO historico_ubicacion_geografica 
        (nombre_usuario, tipo_operacion, mensaje, fk_id_ubicacion_geografica, fecha)
-       VALUES (?, ?, ?, ?, datetime('now', 'localtime'))`,
+       VALUES (?, ?, ?, ?, ?)`,
       [
         params.nombreUsuario,
         params.tipoOperacion,
         mensaje,
-        params.idUbicacion
+        params.idUbicacion,
+        fechaISO
       ]
     );
   } catch (error) {
@@ -187,16 +205,34 @@ function generarMensajeRuta(params: RegistrarHistoricoRutaParams): string {
 export async function registrarHistoricoRuta(params: RegistrarHistoricoRutaParams): Promise<void> {
   const mensaje = generarMensajeRuta(params);
 
+  // Obtener la fecha/hora actual en zona horaria de Santiago de Chile
+  const fechaSantiago = new Date().toLocaleString('es-CL', {
+    timeZone: 'America/Santiago',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  
+  // Convertir de formato "DD-MM-YYYY, HH:mm:ss" a "YYYY-MM-DD HH:mm:ss" para SQLite
+  const [fecha, hora] = fechaSantiago.split(', ');
+  const [dia, mes, año] = fecha.split('-');
+  const fechaISO = `${año}-${mes}-${dia} ${hora}`;
+
   try {
     await query.run(
       `INSERT INTO historico_ruta 
        (nombre_usuario, tipo_operacion, mensaje, fk_id_ruta, fecha)
-       VALUES (?, ?, ?, ?, datetime('now', 'localtime'))`,
+       VALUES (?, ?, ?, ?, ?)`,
       [
         params.nombreUsuario,
         params.tipoOperacion,
         mensaje,
-        params.idRuta
+        params.idRuta,
+        fechaISO
       ]
     );
   } catch (error) {
