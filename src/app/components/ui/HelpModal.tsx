@@ -23,11 +23,9 @@ export default function HelpModal(){
       >
         <i aria-expanded={open}
         aria-controls="modalHelp"
-        style={{
-          position: 'fixed',
+        style={{    
           right: 24,
           bottom: 80,
-          zIndex: 1060,
           display: 'inline-flex',
           width: 48,
           height: 48,
@@ -46,7 +44,7 @@ export default function HelpModal(){
           aria-modal="true"
           id="modalHelp"
           onClick={() => setOpen(false)}
-          style={{ position: 'fixed', inset: 0, zIndex: 1070, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 1080, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)' }}
         >
           <div
             className="uc-modal_content uc-message"

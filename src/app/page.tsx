@@ -7,8 +7,6 @@ import { MapProvider } from "./components/context/MapContext";
 import Header from "./components/layout/Header";
 import { SidebarProvider } from "./components/context/SidebarContext";
 import FloatingRouteDetailsButton from "./components/ui/FloatingRouteDetailsButton";
-import HelpModal from "./components/ui/HelpModal";
-import FloatingGeolocateButton from "./components/ui/FloatingGeolocateButton";
 
 export default function Page() {
   return (
@@ -21,10 +19,6 @@ export default function Page() {
               <main className="map-area">
                 <Map />
                 <FloatingRouteDetailsButton />
-                <div>
-                <FloatingGeolocateButton />
-                <HelpModal />
-                </div>
               </main>
             </div>
           </div>

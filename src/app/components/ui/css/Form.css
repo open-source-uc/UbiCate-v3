@@ -51,13 +51,11 @@
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
   position: relative;
-  z-index: 2;
 }
 
 .uc-input-style:focus {
   border-color: #0176DE;
   box-shadow: 0 0 0 3px rgba(1, 118, 222, 0.2);
-  z-index: 3;
 }
 
 .uc-input-style:disabled {

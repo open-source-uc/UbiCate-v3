@@ -26,10 +26,8 @@ export default function FloatingGeolocateButton() {
       <i
         className="uc-icon icon-shape--rounded"
         style={{
-          position: 'fixed',
           right: 24,
           bottom: 24,
-          zIndex: 1060,
           display: 'inline-flex',
           width: 48,
           height: 48,
