@@ -354,6 +354,54 @@ export class MapManager {
   }
 }
 
+/**
+ * Draw a single shared place on the map (for shared links)
+ */
+static drawSharedPlace(
+  map: mapboxgl.Map,
+  placeData: {
+    id_lugar: number;
+    nombre_lugar: string;
+    id_tipo_lugar: number;
+    featureCollection: any;
+  },
+  opts: { zoom?: boolean } = {}
+) {
+  (async () => {
+    try {
+      // Espera a que los iconos estén inicializados
+      await MapUtils.initPlaceIcons?.();
+      console.log('[drawSharedPlace] Drawing shared place:', placeData);
+
+      // Get icon and color for the place type
+      const iconSpec = MapUtils.idToIcon(placeData.id_tipo_lugar) || { icon: "home", color: "#0176DE" };
+
+      // Enrich features with required properties
+      const enrichedFC = {
+        ...placeData.featureCollection,
+        features: placeData.featureCollection.features.map((f: any) => ({
+          ...f,
+          id: placeData.id_lugar,
+          properties: {
+            ...(f.properties || {}),
+            placeId: placeData.id_lugar,
+            placeName: placeData.nombre_lugar,
+            placeTypeId: placeData.id_tipo_lugar,
+            placeIcon: iconSpec.icon,
+            placeColor: iconSpec.color,
+          }
+        }))
+      };
+
+      // Use the existing drawPlaces function with mode: single
+      this.drawPlaces(map, enrichedFC, { mode: "single", zoom: opts.zoom ?? true });
+
+    } catch (err) {
+      console.error("[drawSharedPlace] Error:", err);
+    }
+  })();
+}
+
 static drawPlaces(
   map: mapboxgl.Map,
   data: unknown | unknown[],
@@ -742,7 +790,17 @@ static drawPlaces(
 
       for (const f of pointFC) {
         const p = f.properties as any;
-        const spec = (() => { try { return MapUtils.idToIcon(p?.placeTypeId) || { icon:"home", color:"#0176DE" }; } catch { return { icon:"home", color:"#0176DE" }; }})();
+        // Prioriza placeIcon y placeColor si existen, si no usa MapUtils
+        const spec = (() => {
+          try {
+            if (p?.placeIcon && p?.placeColor) {
+              return { icon: p.placeIcon, color: p.placeColor };
+            }
+            return MapUtils.idToIcon(p?.placeTypeId) || { icon: "home", color: "#0176DE" };
+          } catch {
+            return { icon: "home", color: "#0176DE" };
+          }
+        })();
         const base = spec.color || "#0176DE";
         const hov  = MapUtils.shadeColor(base, -0.18);
 

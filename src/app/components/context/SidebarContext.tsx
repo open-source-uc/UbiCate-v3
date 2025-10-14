@@ -37,6 +37,18 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
     return () => window.removeEventListener("popstate", update);
   }, []);
 
+  // Close sidebar on mobile when emergency location is shared
+  useEffect(() => {
+    const hasEmergencyParams = params.has("lat") && params.has("lng");
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    
+    if (hasEmergencyParams && isMobile) {
+      setIsOpen(false);
+      // Dispatch the close event for mobile sidebar
+      window.dispatchEvent(new Event("sidebar:close"));
+    }
+  }, [params]);
+
   const toggleSidebar = () => setIsOpen((prev) => !prev);
   const openSidebar = () => {
     window.dispatchEvent(new Event("sidebar:open"));
@@ -75,39 +87,30 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
         .then(place => {
           if (place && place.id_lugar && mapRef.current) {
             const map = mapRef.current;
-            
-            // Draw the place on the map using MapManager
+
+            // Draw the place on the map using the dedicated shared place function
             if (place.featureCollection) {
-              // Enrich features with required properties for interaction
-              const enrichedFC = {
-                ...place.featureCollection,
-                features: place.featureCollection.features.map((f: any) => ({
-                  ...f,
-                  id: place.id_lugar,
-                  properties: {
-                    ...(f.properties || {}),
-                    placeId: place.id_lugar,
-                    placeName: place.nombre_lugar,
-                    placeTypeId: place.id_tipo_lugar,
-                    campusId: place.id_campus,
-                    ...place // Include all place data
-                  }
-                }))
-              };
-              
-              MapManager.drawPlaces(map, enrichedFC, { mode: "single", zoom: true });
+              MapManager.drawSharedPlace(map, {
+                id_lugar: place.id_lugar,
+                nombre_lugar: place.nombre_lugar,
+                id_tipo_lugar: place.id_tipo_lugar,
+                featureCollection: place.featureCollection
+              }, { zoom: true });
             }
-            
-            // The API already returns the place with featureCollection
-            // Dispatch event to open place in sidebar (same as clicking on map)
+
+            // Dispatch event to prepare place data for sidebar
             const payload = {
               placeId: String(place.id_lugar),
               properties: { ...place },
               geometryType: place.nombre_tipo_geojson || "Point",
             };
-            
+
             window.dispatchEvent(new CustomEvent("place:open-in-sidebar", { detail: payload }));
-            window.dispatchEvent(new Event("sidebar:open"));
+
+            // Si es móvil, forzar el cierre del sidebar para que nunca se abra automáticamente
+            if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(max-width: 768px)").matches) {
+              window.dispatchEvent(new Event("sidebar:close"));
+            }
           }
         })
         .catch(err => console.error("Error loading shared place:", err));
