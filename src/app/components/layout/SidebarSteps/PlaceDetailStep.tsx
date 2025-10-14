@@ -7,7 +7,6 @@ import { useState, useEffect } from "react";
 import type { Place, Image as ImageType } from "@/app/types/placeType";
 import { marked } from "marked";
 import { useSidebar } from "../../context/SidebarContext";
-import { useMap } from "../../context/MapContext";
 
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import "photoswipe/style.css";
@@ -33,12 +32,10 @@ function getImageSize(base64: string): Promise<{ w: number; h: number }> {
 
 
 export default function PlaceDetailStep({ data }: StepProps) {
-  const { mapRef } = useMap();
   const [place, setPlace] = useState<PlaceWithGeo | null>(null);
   const [sized, setSized] = useState<SizedImage[] | null>(null);
+  const [sharing, setSharing] = useState(false);
   const { clearQueryParams } = useSidebar();
-
-  const map = mapRef.current;
 
   useEffect(() => {
     if (!data?.placeId) return;
@@ -168,6 +165,42 @@ export default function PlaceDetailStep({ data }: StepProps) {
     clearQueryParams();
   }
 
+  async function handleSharePlace(e: React.MouseEvent<HTMLAnchorElement>) {
+    e.preventDefault();
+    
+    if (!place) return;
+    
+    setSharing(true);
+
+    try {
+      // Generar URL con el placeId para abrir el lugar completo
+      const shareUrl = `${window.location.origin}/?menu=PlaceDetailStep&placeId=${place.id_lugar}`;
+      const message = `📍 ${place.nombre_lugar} - ${place.nombre_campus}\n${shareUrl}`;
+
+      // Intentar usar Web Share API
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `${place.nombre_lugar} - UC`,
+            text: message,
+            url: shareUrl
+          });
+        } catch {
+          // Usuario canceló
+        }
+      } else {
+        // Fallback: copiar al portapapeles
+        await navigator.clipboard.writeText(shareUrl);
+        alert('✅ Enlace copiado al portapapeles:\n' + shareUrl);
+      }
+    } catch (error) {
+      console.error('Error al compartir:', error);
+      alert('❌ Error al compartir ubicación');
+    } finally {
+      setSharing(false);
+    }
+  }
+
   return (
     <ul {...StepTagAttributes}>
       <button className="uc-btn btn-featured" onClick={handleStepBack}>
@@ -176,6 +209,24 @@ export default function PlaceDetailStep({ data }: StepProps) {
       </button>
       <br />
       <h1 style={{ fontSize: "1.5rem" }}>{place.nombre_lugar}</h1>
+      
+      {/* Botón Compartir */}
+      <a 
+        href="#" 
+        className="uc-btn btn-secondary"
+        onClick={handleSharePlace}
+        style={{ 
+          marginTop: '10px', 
+          marginBottom: '10px',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        {sharing ? 'Compartiendo...' : 'Compartir'}
+        <i className="uc-icon">share</i>
+      </a>
+      
       <span className="uc-tag" style={{ fontSize: "1.2rem", marginTop: 10 }}>
         {place.nombre_tipo_lugar}
       </span>

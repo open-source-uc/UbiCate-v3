@@ -1,5 +1,7 @@
 import { createContext, useContext, useRef, useState, useEffect, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
+import { useSearchParams } from 'next/navigation';
+import { createEmergencyMarker } from '@/app/lib/emergencyMarker';
 import MapManager from '@/app/lib/mapManager';
 import MapUtils from '@/utils/MapUtils';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -54,6 +56,22 @@ export const MapProvider = ({ children }: { children: React.ReactNode }) => {
   const [routes, setRoutes] = useState<RouteWithGeo[]>([]);
   const [currentCampus, setCurrentCampus] = useState<CampusWithGeo | null>(null);
   const [activeRoute, setActiveRoute] = useState<RouteWithGeo | null>(null);
+  const searchParams = useSearchParams();
+const sharedLocationRef = useRef<{ lat: number; lng: number } | null>(null);
+
+useEffect(() => {
+  const latParam = searchParams.get('lat');
+  const lngParam = searchParams.get('lng');
+  
+  if (latParam && lngParam) {
+    const lat = parseFloat(latParam);
+    const lng = parseFloat(lngParam);
+    
+    if (!isNaN(lat) && !isNaN(lng)) {
+      sharedLocationRef.current = { lat, lng };
+    }
+  }
+}, [searchParams]);
   
   // Loading states to prevent duplicate API calls
   const loadingStatesRef = useRef({
@@ -90,8 +108,14 @@ useEffect(() => {
 
   map.on('load', () => {
     setLoaded(true);
-    console.log('[MapProvider] Mapa cargado');
-  });
+  
+  const sharedLocation = sharedLocationRef.current;
+  if (sharedLocation) {
+    setTimeout(() => {
+      createEmergencyMarker(map, sharedLocation.lat, sharedLocation.lng);
+    }, 500);
+  }
+});
 
   return () => {
     mapRef.current?.remove();

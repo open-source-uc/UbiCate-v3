@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 
 export default function HelpModal(){
   const [open, setOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   // Close on Escape
   useEffect(() => {
@@ -11,6 +12,56 @@ export default function HelpModal(){
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  const handleShareLocation = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setSharing(true);
+
+    try {
+      // Obtener ubicación actual del usuario
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          // Generar URL de compartir (directamente en la raíz)
+          const shareUrl = `${window.location.origin}/?lat=${latitude}&lng=${longitude}`;
+          const message = `🚨 EMERGENCIA - Estoy en esta ubicación en el campus UC:\n${shareUrl}`;
+          
+          // Intentar usar Web Share API (funciona en móviles)
+          if (navigator.share) {
+            try {
+              await navigator.share({
+                title: 'Ubicación de Emergencia UC',
+                text: message,
+                url: shareUrl
+              });
+            } catch {
+              // Usuario canceló el compartir
+            }
+          } else {
+            // Fallback: copiar al portapapeles
+            await navigator.clipboard.writeText(shareUrl);
+            alert('✅ Enlace copiado al portapapeles:\n' + shareUrl);
+          }
+          setSharing(false);
+        },
+        (error) => {
+          console.error('Error obteniendo ubicación:', error);
+          alert('❌ No se pudo obtener tu ubicación. Verifica los permisos de ubicación.');
+          setSharing(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    } catch (error) {
+      console.error('Error al compartir:', error);
+      alert('❌ Error al compartir ubicación');
+      setSharing(false);
+    }
+  };
 
   return (
     <>
@@ -68,11 +119,15 @@ export default function HelpModal(){
                   <a
                     href="#"
                     className="uc-btn btn-secondary"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={handleShareLocation}
                     style={{ display: 'inline-flex', width: 'auto', alignItems: 'center', justifyContent: 'center', padding: '6px 10px', height: 36, fontSize: 14, gap: 8 }}
                   >
-                    <span style={{ lineHeight: 1 }}>Compartir mi ubicación</span>
-                    <i className="uc-icon" style={{ marginLeft: 4, fontSize: 18 }}>person_pin_circle</i>
+                    <span style={{ lineHeight: 1 }}>
+                      {sharing ? 'Obteniendo ubicación...' : 'Compartir mi ubicación'}
+                    </span>
+                    <i className="uc-icon" style={{ marginLeft: 4, fontSize: 18 }}>
+                      {sharing ? 'hourglass_empty' : 'person_pin_circle'}
+                    </i>
                   </a>
                 </div>
                 <br />

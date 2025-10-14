@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from "react";
 import Footer from "./components/layout/Footer";
 import SidebarDesktop from "./components/layout/SidebarDesktop";
 import Map from "./components/ui/Map";
@@ -10,20 +11,22 @@ import FloatingRouteDetailsButton from "./components/ui/FloatingRouteDetailsButt
 
 export default function Page() {
   return (
-    <MapProvider>
-        <SidebarProvider>
-          <div className="view-container">
-            <Header isAdmin={false} />
-            <div className="main-area">
-              <SidebarDesktop />
-              <main className="map-area">
-                <Map />
-                <FloatingRouteDetailsButton />
-              </main>
+    <Suspense fallback={<div>Cargando...</div>}>
+      <MapProvider>
+          <SidebarProvider>
+            <div className="view-container">
+              <Header isAdmin={false} />
+              <div className="main-area">
+                <SidebarDesktop />
+                <main className="map-area">
+                  <Map />
+                  <FloatingRouteDetailsButton />
+                </main>
+              </div>
             </div>
-          </div>
-        </SidebarProvider>
-      <Footer />
-    </MapProvider>
+          </SidebarProvider>
+        <Footer />
+      </MapProvider>
+    </Suspense>
   );
 }

@@ -3,6 +3,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useMap } from "./MapContext";
+import { MapManager } from "@/app/lib/mapManager";
 
 interface SidebarContextProps {
   isOpen: boolean;
@@ -19,7 +20,7 @@ const SidebarContext = createContext<SidebarContextProps | undefined>(undefined)
 export const SidebarProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [step, setStep] = useState("MainStep");
-  const { flyToCampus, campusData } = useMap();
+  const { flyToCampus, campusData, mapRef } = useMap();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -59,6 +60,59 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const campus = params.get("campus");
     const menu = params.get("menu");
+    const placeId = params.get("placeId");
+
+    // Handle placeId parameter (from shared links with menu=PlaceDetailStep)
+    if (placeId && !isNaN(Number(placeId)) && menu === "PlaceDetailStep") {
+      // Fetch place data and open it in sidebar
+      fetch(`/api/places/${placeId}`)
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          return res.json();
+        })
+        .then(place => {
+          if (place && place.id_lugar && mapRef.current) {
+            const map = mapRef.current;
+            
+            // Draw the place on the map using MapManager
+            if (place.featureCollection) {
+              // Enrich features with required properties for interaction
+              const enrichedFC = {
+                ...place.featureCollection,
+                features: place.featureCollection.features.map((f: any) => ({
+                  ...f,
+                  id: place.id_lugar,
+                  properties: {
+                    ...(f.properties || {}),
+                    placeId: place.id_lugar,
+                    placeName: place.nombre_lugar,
+                    placeTypeId: place.id_tipo_lugar,
+                    campusId: place.id_campus,
+                    ...place // Include all place data
+                  }
+                }))
+              };
+              
+              MapManager.drawPlaces(map, enrichedFC, { mode: "single", zoom: true });
+            }
+            
+            // The API already returns the place with featureCollection
+            // Dispatch event to open place in sidebar (same as clicking on map)
+            const payload = {
+              placeId: String(place.id_lugar),
+              properties: { ...place },
+              geometryType: place.nombre_tipo_geojson || "Point",
+            };
+            
+            window.dispatchEvent(new CustomEvent("place:open-in-sidebar", { detail: payload }));
+            window.dispatchEvent(new Event("sidebar:open"));
+          }
+        })
+        .catch(err => console.error("Error loading shared place:", err));
+      return;
+    }
 
     if (!campus && !menu) return setStep("MainStep");
     if (menu && menu !== "PlacesStep") setStep(menu);
@@ -68,7 +122,7 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
       flyToCampus(Number(campus));
       setStep("PlacesStep");
     }
-  }, [params, campusData]);
+  }, [params, campusData, flyToCampus, mapRef]);
 
   return (
     <SidebarContext.Provider

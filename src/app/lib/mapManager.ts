@@ -892,10 +892,10 @@ static drawPlaces(
       const only = [...groups.values()][0];
       if (only?.polys?.length) {
         const b = boundsOfPolys(only.polys);
-        if (b) map.fitBounds(b, { padding: 60, maxZoom: 18, duration: 500 });
+        if (b) map.fitBounds(b, { padding: 100, maxZoom: 17, duration: 500 });
       } else if (only?.points?.length) {
         const [lng, lat] = (only.points[0].geometry as GeoJSON.Point).coordinates as [number, number];
-        map.easeTo({ center:[lng,lat], zoom:16, duration:500 });
+        map.easeTo({ center:[lng,lat], zoom:15, duration:500 });
       }
     }
 
