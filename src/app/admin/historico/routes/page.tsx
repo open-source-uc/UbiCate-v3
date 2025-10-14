@@ -21,7 +21,7 @@ export default function HistoricoRutasPage() {
   // Filtros
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<string[]>([]);
-  const [selectedRuta, setSelectedRuta] = useState<string>("");
+  const [selectedLugar, setSelectedLugar] = useState<string>("");
   const [filterOperacion, setFilterOperacion] = useState("");
   const [filterCampus, setFilterCampus] = useState("");
   const [filterUsuario, setFilterUsuario] = useState("");
@@ -42,10 +42,10 @@ export default function HistoricoRutasPage() {
   // Filtrado
   const filteredHistorico = historico.filter(h => {
     const matchOperacion = !filterOperacion || h.tipo_operacion === filterOperacion.toUpperCase();
-    const matchRuta = selectedRuta ? h.nombre_ruta === selectedRuta : (!search || h.nombre_ruta?.toLowerCase().includes(search.toLowerCase()));
+    const matchLugar = selectedLugar ? h.nombre_ruta === selectedLugar : (!search || h.nombre_ruta?.toLowerCase().includes(search.toLowerCase()));
     const matchCampus = !filterCampus || h.nombre_campus === filterCampus;
     const matchUsuario = !filterUsuario || h.nombre_usuario === filterUsuario;
-    return matchOperacion && matchRuta && matchCampus && matchUsuario;
+    return matchOperacion && matchLugar && matchCampus && matchUsuario;
   });
 
   const totalPages = Math.ceil(filteredHistorico.length / pageSize);
@@ -57,19 +57,17 @@ export default function HistoricoRutasPage() {
   // Autocomplete para rutas
   useEffect(() => {
     if (search.length > 0) {
-      const rutasFiltradas = historico.filter(h => {
+      const lugaresFiltrados = historico.filter(h => {
         const matchOperacion = !filterOperacion || h.tipo_operacion === filterOperacion;
         const matchCampus = !filterCampus || h.nombre_campus === filterCampus;
         return matchOperacion && matchCampus;
       });
-      
-      const nombresRutas = Array.from(new Set(
-        rutasFiltradas
+      const nombresLugares = Array.from(new Set(
+        lugaresFiltrados
           .map(h => h.nombre_ruta)
           .filter((n): n is string => n !== null && n.toLowerCase().includes(search.toLowerCase()))
       )).sort().slice(0, 8);
-      
-      setSearchResults(nombresRutas);
+      setSearchResults(nombresLugares);
     } else {
       setSearchResults([]);
     }
@@ -138,8 +136,8 @@ export default function HistoricoRutasPage() {
     });
   };
 
-  if (loading) return <AdminPageContainer title="Histórico de Rutas"><p>Cargando histórico...</p></AdminPageContainer>;
-  if (error) return <AdminPageContainer title="Histórico de Rutas"><p style={{ color: "#EF4444" }}>Error: {error}</p></AdminPageContainer>;
+  if (loading) return <AdminPageContainer title="Historial de Cambios de Rutas"><p>Cargando historial de Cambios de Rutas...</p></AdminPageContainer>;
+  if (error) return <AdminPageContainer title="Historial de Cambios de Rutas"><p style={{ color: "#EF4444" }}>Error: {error}</p></AdminPageContainer>;
 
   return (
     <AdminPageContainer title="Historial de Cambios de Rutas">
@@ -190,7 +188,7 @@ export default function HistoricoRutasPage() {
                   value={search}
                   onChange={e => {
                     setSearch(e.target.value);
-                    setSelectedRuta("");
+                    setSelectedLugar("");
                     setCurrentPage(1);
                   }}
                   autoComplete="off"
@@ -212,27 +210,31 @@ export default function HistoricoRutasPage() {
                       boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
                       margin: 0,
                       padding: 0,
+                      listStyle: "none",
                     }}
                   >
-                    {searchResults.map((name, idx) => (
+                    {searchResults.map((nombre) => (
                       <li
-                        key={name + "-" + idx}
+                        key={nombre}
                         style={{
-                          listStyle: "none",
-                          padding: "12px 18px",
+                          padding: "10px 16px",
                           cursor: "pointer",
-                          fontSize: "1.25rem",
-                          borderBottom: idx === searchResults.length - 1 ? "none" : "1px solid #eee",
-                          background: "#fff",
+                          borderBottom: "1px solid #f0f0f0",
                         }}
-                        onMouseDown={() => {
-                          setSelectedRuta(name);
-                          setSearch(name);
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "#f3f4f6";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "#fff";
+                        }}
+                        onClick={() => {
+                          setSelectedLugar(nombre);
+                          setSearch(nombre);
                           setSearchResults([]);
                           setCurrentPage(1);
                         }}
                       >
-                        {name}
+                        {nombre}
                       </li>
                     ))}
                   </ul>
@@ -240,9 +242,9 @@ export default function HistoricoRutasPage() {
               </div>
             </div>
 
-            {/* Filtros en línea */}
+            {/* Filtros de operación y campus */}
             <div
-              style={{  
+              style={{
                 display: "flex",
                 flexDirection: "row",
                 gap: "24px",
@@ -252,11 +254,8 @@ export default function HistoricoRutasPage() {
               }}
             >
               <div className="uc-form-group" style={{ flex: "1 1 30%", minWidth: "180px", maxWidth: "300px", position: "relative", top: "20px" }}>
-                <label className="uc-label-help" htmlFor="filterOperacion">
+                <label htmlFor="filterOperacion" className="uc-form-label">
                   Tipo de Operación
-                  <span className="uc-tooltip" data-tippy-content="Filtra por tipo de operación">
-                    <i className="uc-icon">info</i>
-                  </span>
                 </label>
                 <select
                   id="filterOperacion"
@@ -267,19 +266,16 @@ export default function HistoricoRutasPage() {
                   }}
                   className="uc-input-style"
                 >
-                  <option value="">Todas las operaciones</option>
+                  <option value="">Todas las Operaciones</option>
                   {todasOperaciones.map(op => (
-                    <option key={op} value={op.toUpperCase()}>{op}</option>
+                    <option key={op} value={op}>{op}</option>
                   ))}
                 </select>
               </div>
 
               <div className="uc-form-group" style={{ flex: "1 1 30%", minWidth: "180px", maxWidth: "300px", position: "relative", top: "20px" }}>
-                <label className="uc-label-help" htmlFor="filterCampus">
+                <label htmlFor="filterCampus" className="uc-form-label">
                   Campus
-                  <span className="uc-tooltip" data-tippy-content="Filtra por campus">
-                    <i className="uc-icon">info</i>
-                  </span>
                 </label>
                 <select
                   id="filterCampus"
@@ -291,18 +287,15 @@ export default function HistoricoRutasPage() {
                   className="uc-input-style"
                 >
                   <option value="">Todos los campus</option>
-                  {todosCampus.map((c, idx) => (
-                    <option key={c.id_campus + '-' + idx} value={c.nombre_campus}>{c.nombre_campus}</option>
+                  {todosCampus.map(campus => (
+                    <option key={campus.id_campus} value={campus.nombre_campus}>{campus.nombre_campus}</option>
                   ))}
                 </select>
               </div>
 
               <div className="uc-form-group" style={{ flex: "1 1 30%", minWidth: "180px", maxWidth: "300px", position: "relative", top: "20px" }}>
-                <label className="uc-label-help" htmlFor="filterUsuario">
+                <label htmlFor="filterUsuario" className="uc-form-label">
                   Usuario
-                  <span className="uc-tooltip" data-tippy-content="Filtra por usuario">
-                    <i className="uc-icon">info</i>
-                  </span>
                 </label>
                 <select
                   id="filterUsuario"
@@ -330,7 +323,7 @@ export default function HistoricoRutasPage() {
             className="uc-btn btn-secondary clear-filters-button"
             onClick={() => {
               setSearch("");
-              setSelectedRuta("");
+              setSelectedLugar("");
               setSearchResults([]);
               setFilterOperacion("");
               setFilterCampus("");

@@ -948,12 +948,14 @@ static drawPlaces(
     const doZoom = opts.zoom ?? (mode === "single");
     if (doZoom && mode === "single") {
       const only = [...groups.values()][0];
+      // Cancel any ongoing animation before flying to new place
+      map.stop();
       if (only?.polys?.length) {
         const b = boundsOfPolys(only.polys);
         if (b) map.fitBounds(b, { padding: 100, maxZoom: 17, duration: 500 });
       } else if (only?.points?.length) {
         const [lng, lat] = (only.points[0].geometry as GeoJSON.Point).coordinates as [number, number];
-        map.easeTo({ center:[lng,lat], zoom:15, duration:500 });
+        map.easeTo({ center:[lng,lat], zoom:18, duration:500 });
       }
     }
 

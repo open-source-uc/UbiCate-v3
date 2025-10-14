@@ -125,6 +125,15 @@ useEffect(() => {
     const piso_punto = Number(fd.get("piso_punto"));
     const id_campus = Number(fd.get("id_campus"));
 
+    // Validación de piso antes de cualquier otra cosa
+    if (isNaN(piso_punto) || piso_punto < 1 || piso_punto > 50) {
+      setSubmitting(false);
+      setIsSuccess(false);
+      setModalMessage("El piso debe ser un número entre 1 y 50.");
+      setModalOpen(true);
+      return;
+    }
+
     try {
       const imagenes: { base64: string; descripcion?: string }[] = [];
 
@@ -152,7 +161,6 @@ useEffect(() => {
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
-
         imagenes.push({ base64, descripcion: img.descripcion?.trim() || undefined });
       }
 
@@ -182,7 +190,6 @@ useEffect(() => {
     } catch (err: unknown) {
       setIsSuccess(false);
       setModalMessage(err instanceof Error ? err.message : "No se pudo enviar su sugerencia");
-      setModalOpen(true);
     } finally {
       setSubmitting(false);
     }
@@ -334,7 +341,7 @@ useEffect(() => {
             <div className="uc-form-group">
               <label htmlFor="piso_punto" className="uc-label-help">
                 <span className="uc-label-text">Piso</span>
-                <span className="uc-tooltip" data-tippy-content="Es el piso donde se encuentra el punto de interés (-10 a 50)">
+                <span className="uc-tooltip" data-tippy-content="Es el piso donde se encuentra el punto de interés (1 a 50)">
                   <i className="uc-icon">info</i>
                 </span>
               </label>
@@ -342,7 +349,7 @@ useEffect(() => {
                 id="piso_punto"
                 name="piso_punto"
                 type="number"
-                min="-10" max="50"
+                min="1" max="50"
                 className="uc-input-style"
                 required
                 placeholder="1"

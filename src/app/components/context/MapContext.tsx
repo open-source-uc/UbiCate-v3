@@ -406,6 +406,16 @@ const showRoute = (routeId: number) => {
 
   useEffect(() => {
     if (loaded && campusData.length > 0) {
+      // Evitar flyToCampus(1) si la URL contiene un placeId compartido
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const placeId = params.get('placeId');
+        const menu = params.get('menu');
+        if (placeId && !isNaN(Number(placeId)) && menu === 'PlaceDetailStep') {
+          // Hay un link compartido, no hacer flyToCampus(1)
+          return;
+        }
+      }
       console.log('[MapProvider] Mapa y datos listos. Volando al campus inicial (ID=1).');
       flyToCampus(1);
     }

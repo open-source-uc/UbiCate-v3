@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import tippy from "tippy.js";
+import "tippy.js/dist/tippy.css";
 import AdminPageContainer from "@/app/components/ui/admin/AdminPageContainer";
 
 interface HistoricoItem {
@@ -14,6 +16,10 @@ interface HistoricoItem {
 }
 
 export default function HistoricoPage() {
+  // Inicializar tooltips Tippy.js en los labels de filtros
+  useEffect(() => {
+    tippy('.uc-tooltip', { placement: 'top', arrow: true });
+  }, []);
   const [historico, setHistorico] = useState<HistoricoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -138,8 +144,8 @@ export default function HistoricoPage() {
     });
   };
 
-  if (loading) return <AdminPageContainer title="Histórico de Cambios"><p>Cargando histórico...</p></AdminPageContainer>;
-  if (error) return <AdminPageContainer title="Histórico de Cambios"><p style={{ color: "#EF4444" }}>Error: {error}</p></AdminPageContainer>;
+  if (loading) return <AdminPageContainer title="Historial de Cambios de Lugares"><p>Cargando historial de Cambios de Lugares...</p></AdminPageContainer>;
+  if (error) return <AdminPageContainer title="Historial de Cambios de Lugares"><p style={{ color: "#EF4444" }}>Error: {error}</p></AdminPageContainer>;
 
   return (
     <AdminPageContainer title="Historial de Cambios de Lugares">
@@ -152,7 +158,7 @@ export default function HistoricoPage() {
               flexDirection: "column",
               gap: "16px",
               marginBottom: "24px",
-              background: "#fff",
+              background: "#fff", 
               padding: "24px",
               borderRadius: "12px",
               boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
