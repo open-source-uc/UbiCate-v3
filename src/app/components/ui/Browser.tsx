@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import Fuse from 'fuse.js';
 import { useMap } from '../context/MapContext';
 import MapManager from '@/app/lib/mapManager';
+import MapUtils from '@/utils/MapUtils';
 import type { FeatureCollection } from 'geojson';
 import type { Place } from '@/app/types/placeType';
 import { useSidebar } from '../context/SidebarContext';
@@ -47,21 +48,26 @@ export default function Browser() {
     const raw = place.featureCollection ?? place.geojson;
     if (!raw) return;
 
-    const fc = MapManager.toFeatureCollection(raw);
-    const pid = String(place.id_lugar);
-
-    fc.features = (fc.features ?? []).map(f => ({
-      ...f,
-      id: pid,
-      properties: {
-        ...(f.properties ?? {}),
-        placeId: pid,
-        placeTypeId: place.id_tipo_lugar,
-        placeName: place.nombre_lugar,   
-      }
-    }));
-    (map as any).__removeRoutes?.();
-    MapManager.drawPlaces(map, fc, { mode: "single" })
+    // Espera a que los íconos estén inicializados
+    MapUtils.initPlaceIcons?.().then(() => {
+      const iconSpec = MapUtils.idToIcon(place.id_tipo_lugar) || { icon: "home", color: "#0176DE" };
+      const fc = MapManager.toFeatureCollection(raw);
+      const pid = String(place.id_lugar);
+      fc.features = (fc.features ?? []).map(f => ({
+        ...f,
+        id: pid,
+        properties: {
+          ...(f.properties ?? {}),
+          placeId: pid,
+          placeTypeId: place.id_tipo_lugar,
+          placeName: place.nombre_lugar,
+          placeIcon: iconSpec.icon,
+          placeColor: iconSpec.color,
+        }
+      }));
+      (map as any).__removeRoutes?.();
+      MapManager.drawPlaces(map, fc, { mode: "single" });
+    });
   };
 
   return (
