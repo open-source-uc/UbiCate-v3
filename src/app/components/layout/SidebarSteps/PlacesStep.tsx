@@ -54,13 +54,7 @@ export default function PlacesStep() {
         ))}
       </SideSection>
       <br />
-      <div style={{
-        marginTop: "auto",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "8px" 
-      }}>
+      <div className="sidebar-steps-actions">
         <StepButton step="SuggestStep" text="Propone un lugar" icon="add_location" />
         <StepButton step="CommentStep" text="Enviar sugerencia" icon="mail" />
       </div>

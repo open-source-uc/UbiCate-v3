@@ -175,3 +175,9 @@
   opacity: 1;
   font-style: italic;
 }
+
+@media (max-width: 1200px) {
+  .form-container {
+    padding-bottom: 110px;
+  }
+}

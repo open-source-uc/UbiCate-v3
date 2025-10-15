@@ -257,7 +257,7 @@ useEffect(() => {
   }
 
   return (
-    <ul {...stepAttrs}>
+    <ul {...StepTagAttributes}>
       <div className="suggest-header">
         <button className="uc-btn btn-featured" 
         onClick={() => clearQueryParams()}

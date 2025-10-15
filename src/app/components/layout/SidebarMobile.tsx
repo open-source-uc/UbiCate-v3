@@ -63,7 +63,7 @@ export default function SidebarMobile({ open, onClose, topOffset, setOpen }: Sid
     <>
       <div style={backdrop} onClick={onClose} />
       <div className="uc-navbar_mobile-content" style={drawerStyle}>
-        <div style={{ padding: '1rem', flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: '1rem', flex: 1, overflowY: 'auto'}}>
           <SidebarSteps onClose={onClose}/>
         </div>
       </div>

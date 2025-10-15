@@ -1,10 +1,10 @@
 export const StepTagAttributes = {
-  className: "nav uc-navbar-side uc-navbar-side-fit py-40",
+  className: "nav uc-navbar-side uc-navbar-side-fit",
   suppressHydrationWarning: true,
   style: {
-    padding: "20px 10px",
     display: "flex",
     flexDirection: "column",
-    marginBottom: 0
+    marginBottom: 0,
+    paddingBottom: 100
   } as React.CSSProperties
 };
