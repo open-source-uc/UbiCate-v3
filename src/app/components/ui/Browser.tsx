@@ -13,10 +13,11 @@ type PlaceWithGeo = Place & {
   geojson?: unknown;
 };
 
+
 export default function Browser() {
   const { places = [], mapRef } = useMap();
   const [value, setValue] = useState('');
-  const { setQueryParam } = useSidebar();
+  const { setQueryParam, closeSidebar } = useSidebar();
 
   const fuse = useMemo(
     () =>
@@ -34,7 +35,6 @@ export default function Browser() {
     [fuse, value]
   );
 
-  
   const handlePlaceClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
     place: PlaceWithGeo
@@ -67,6 +67,11 @@ export default function Browser() {
       }));
       (map as any).__removeRoutes?.();
       MapManager.drawPlaces(map, fc, { mode: "single" });
+
+      // Cierra el sidebar en móvil
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        closeSidebar();
+      }
     });
   };
 
