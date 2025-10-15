@@ -124,7 +124,7 @@ export class MapManager {
       if (!map.getLayer(layerId)) {
         console.log(`[drawPolygons] Agregando layer: ${layerId}`);
         map.addLayer({
-          id: layerId,
+            id: layerId,
           type: 'line',
           source: sourceId,
           paint: { 'line-color': '#088', 'line-width': 3, 'line-dasharray': [2, 1] },

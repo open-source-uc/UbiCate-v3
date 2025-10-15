@@ -507,8 +507,53 @@ useEffect(() => {
                     const map = mapRef.current;
                     if (!map) throw new Error("Mapa no cargado");
 
-                    MapManager.drawPolygons(map, "prueba", geojson);
+                    // Detecta si es Point o solo Points
+                    const isPoint = (g: any) => g && g.type === "Point";
+                    let onlyPoints = false;
+                    if (geojson.type === "Feature" && isPoint(geojson.geometry)) {
+                      onlyPoints = true;
+                    } else if (geojson.type === "FeatureCollection") {
+                      onlyPoints = geojson.features.length > 0 && geojson.features.every((f: any) => isPoint(f.geometry));
+                    }
 
+                    // Limpia cualquier capa previa
+                    MapManager.removePruebaLayer(map);
+
+                    if (onlyPoints) {
+                      // Muestra solo el/los punto(s) con drawPlaces, sin tipo (question_mark)
+                      // Agrega placeName con el valor del input de nombre
+                      let enriched;
+                      const nombreInput = document.getElementById("nombrePuntoInteres") as HTMLInputElement | null;
+                      const nombreValor = nombreInput?.value || "";
+                      if (geojson.type === "Feature") {
+                        enriched = {
+                          ...geojson,
+                          properties: {
+                            ...(geojson.properties || {}),
+                            placeName: nombreValor
+                          }
+                        };
+                      } else if (geojson.type === "FeatureCollection") {
+                        enriched = {
+                          ...geojson,
+                          features: geojson.features.map((f: any) => ({
+                            ...f,
+                            properties: {
+                              ...(f.properties || {}),
+                              placeName: nombreValor
+                            }
+                          }))
+                        };
+                      } else {
+                        enriched = geojson;
+                      }
+                      MapManager.drawPlaces(map, enriched, { mode: "single", zoom: true });
+                    } else {
+                      // Polígonos o líneas
+                      MapManager.drawPolygons(map, "prueba", geojson);
+                    }
+
+                    // Calcula bounds para centrar
                     const bounds = new mapboxgl.LngLatBounds();
                     let flatCoords: [number, number][] = [];
 
