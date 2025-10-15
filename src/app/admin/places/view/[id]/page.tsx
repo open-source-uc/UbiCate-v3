@@ -6,6 +6,8 @@ import { Place, Image as ImageType } from "@/app/types/placeType";
 import tippy, { Instance } from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import AdminPageContainer from "../../../../components/ui/admin/AdminPageContainer";
+import { EditMapProvider } from "../../../../components/context/EditMapContext";
+import EditMap from "../../../../components/ui/EditMap";
 import { marked } from "marked";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import "photoswipe/style.css";
@@ -252,6 +254,40 @@ export default function ViewPlacePage() {
   if (error) return <div style={{ color: "red" }}>{error}</div>;
   if (!place) return <div>Lugar no encontrado</div>;
 
+  // Prepara el geojson para el mapa (enriquece con id_tipo_lugar y nombre_lugar)
+  const enrichedGeojson = (() => {
+    if (!place.geojson) return null;
+    const gj = typeof place.geojson === 'string' ? JSON.parse(place.geojson) : place.geojson;
+    if (gj?.type === 'FeatureCollection') {
+      return {
+        ...gj,
+        features: gj.features.map((f: any) => {
+          if (f.geometry?.type === 'Point') {
+            return {
+              ...f,
+              properties: {
+                ...f.properties,
+                id_tipo_lugar: place.id_tipo_lugar,
+                nombre_lugar: place.nombre_lugar,
+              },
+            };
+          }
+          return f;
+        }),
+      };
+    } else if (gj?.type === 'Feature' && gj.geometry?.type === 'Point') {
+      return {
+        ...gj,
+        properties: {
+          ...gj.properties,
+          id_tipo_lugar: place.id_tipo_lugar,
+          nombre_lugar: place.nombre_lugar,
+        },
+      };
+    }
+    return gj;
+  })();
+
   // Función para obtener el estilo del badge de estado
   const getEstadoBadgeStyle = (estadoId: number) => {
     const estilos: Record<number, { bg: string; color: string; border: string; text: string }> = {
@@ -408,6 +444,21 @@ export default function ViewPlacePage() {
             </div>
           </div>
         </div>
+
+        {/* Mapa de ubicación (Diseño tipo card como rutas) */}
+        {enrichedGeojson && (
+          <div className="place-info-card" style={{ margin: '2rem 0', padding: '2rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', border: '1px solid #e0e0e0', background: '#fff' }}>
+            <h3 style={{ color: '#0176DE', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="uc-icon">map</i>
+              Ubicación en el mapa
+            </h3>
+            <div style={{ minHeight: 400 }}>
+              <EditMapProvider geojson={enrichedGeojson}>
+                <EditMap />
+              </EditMapProvider>
+            </div>
+          </div>
+        )}
 
         {/* Galería de Imágenes */}
         <div className="place-info-card" style={{ marginTop: "24px" }}>

@@ -357,7 +357,40 @@ export default function EditarLugarPage() {
           {place.geojson && (
             <div style={{ marginTop: '2rem' }}>
               <h2 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Vista previa en el mapa</h2>
-              <EditMapProvider geojson={typeof place.geojson === 'string' ? JSON.parse(place.geojson) : place.geojson}>
+              <EditMapProvider
+                geojson={(() => {
+                  // Normaliza el geojson y agrega id_tipo_lugar y nombre_lugar a cada punto
+                  const gj = typeof place.geojson === 'string' ? JSON.parse(place.geojson) : place.geojson;
+                  if (gj?.type === 'FeatureCollection') {
+                    return {
+                      ...gj,
+                      features: gj.features.map((f: GeoJSON.Feature) => {
+                          if (f.geometry?.type === 'Point') {
+                          return {
+                            ...f,
+                            properties: {
+                              ...f.properties,
+                              id_tipo_lugar: place.id_tipo_lugar,
+                              nombre_lugar: place.nombre_lugar,
+                            },
+                          };
+                        }
+                        return f;
+                      }),
+                    };
+                  } else if (gj?.type === 'Feature' && gj.geometry?.type === 'Point') {
+                    return {
+                      ...gj,
+                      properties: {
+                        ...gj.properties,
+                        id_tipo_lugar: place.id_tipo_lugar,
+                        nombre_lugar: place.nombre_lugar,
+                      },
+                    };
+                  }
+                  return gj;
+                })()}
+              >
                 <EditMap />
               </EditMapProvider>
             </div>

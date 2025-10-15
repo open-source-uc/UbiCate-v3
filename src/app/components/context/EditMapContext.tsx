@@ -1,9 +1,9 @@
-
-
 import React, { createContext, useContext, useRef, useEffect, ReactNode } from 'react';
 import mapboxgl from 'mapbox-gl';
-import type { FeatureCollection, Geometry } from 'geojson';
+import type { FeatureCollection, Geometry, Feature } from 'geojson';
 import { MAPBOX_STYLE_URL } from '@/themes/mapstyles';
+import MapUtils from '@/utils/MapUtils';
+import MapManager from '@/app/lib/mapManager';
 
 type EditMapContextType = {
   mapRef: React.RefObject<mapboxgl.Map | null>;
@@ -31,7 +31,6 @@ export const EditMapProvider = ({ geojson, children, mapStyle }: EditMapProvider
 
   useEffect(() => {
     if (!mapContainer.current) return;
-    // Buscar la primera coordenada válida en cualquier tipo de geojson
     function getFirstCoordinate(gj: any): [number, number] | null {
       if (!gj) return null;
       if (gj.type === 'FeatureCollection' && Array.isArray(gj.features) && gj.features.length > 0) {
@@ -51,13 +50,17 @@ export const EditMapProvider = ({ geojson, children, mapStyle }: EditMapProvider
       return null;
     }
 
-    const centerCoord = getFirstCoordinate(geojson);
-    // Si ya hay un mapa, destrúyelo antes de crear uno nuevo
-    if (mapRef.current) {
-      mapRef.current.remove();
-      mapRef.current = null;
-    }
-    if (!centerCoord) return;
+    let cancelled = false;
+    (async () => {
+      await MapUtils.initPlaceIcons();
+      if (cancelled) return;
+
+      const centerCoord = getFirstCoordinate(geojson);
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      if (!centerCoord) return;
       const mapboxApiKey = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
       mapboxgl.accessToken = mapboxApiKey!;
       const map = new mapboxgl.Map({
@@ -66,79 +69,53 @@ export const EditMapProvider = ({ geojson, children, mapStyle }: EditMapProvider
         center: centerCoord,
         zoom: 16,
       });
-    mapRef.current = map;
-    map.on('load', () => {
-      map.addSource('place', {
-        type: 'geojson',
-        data: geojson,
-      });
-
-      // Si hay polígonos, agrega capa de fill
-      const hasPolygon = (() => {
-        if (geojson?.type === 'FeatureCollection') {
-          return geojson.features.some((f: { geometry?: Geometry }) => f.geometry?.type === 'Polygon' || f.geometry?.type === 'MultiPolygon');
-        }
+      mapRef.current = map;
+      map.on('load', () => {
+        // Prepara el FeatureCollection para drawPlaces
+        let fc: FeatureCollection = geojson;
         if (geojson?.type === 'Feature') {
-          return geojson.geometry?.type === 'Polygon' || geojson.geometry?.type === 'MultiPolygon';
+          fc = { type: 'FeatureCollection', features: [geojson] };
+        } else if (Array.isArray(geojson)) {
+          fc = { type: 'FeatureCollection', features: geojson };
         }
-        return false;
-      })();
-      if (hasPolygon) {
-        map.addLayer({
-          id: 'place-fill',
-          type: 'fill',
-          source: 'place',
-          paint: {
-            'fill-color': '#0176DE',
-            'fill-opacity': 0.25
-          }
-        });
-        map.addLayer({
-          id: 'place-outline',
-          type: 'line',
-          source: 'place',
-          paint: {
-            'line-color': '#0176DE',
-            'line-width': 2
-          }
-        });
-      }
-
-      // Capa de puntos
-      map.addLayer({
-        id: 'place-point',
-        type: 'circle',
-        source: 'place',
-        paint: {
-          'circle-radius': 8,
-          'circle-color': '#007cbf'
-        },
-        filter: ['==', '$type', 'Point']
-      });
-
-      // Capa de etiquetas si hay propiedades nombre
-      map.addLayer({
-        id: 'place-label',
-        type: 'symbol',
-        source: 'place',
-        layout: {
-          'text-field': ['coalesce', ['get', 'nombre_lugar'], ['get', 'name'], ['get', 'Nombre'], ''],
-          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-          'text-size': 14,
-          'text-offset': [0, 1.2],
-          'text-anchor': 'top',
-        },
-        paint: {
-          'text-color': '#0176DE',
-          'text-halo-color': '#fff',
-          'text-halo-width': 2
+        // Asegura que cada punto tenga placeTypeId como número y loguea para depuración
+        fc = {
+          ...fc,
+          features: fc.features.map((f: Feature) => {
+            if (f.geometry?.type === 'Point') {
+              const rawId = f.properties?.id_tipo_lugar ?? f.properties?.placeTypeId;
+              const placeTypeId = rawId !== undefined ? Number(rawId) : undefined;
+              if (process.env.NODE_ENV !== 'production') {
+                // Log para depuración
+                console.log('[EditMapContext] id_tipo_lugar:', rawId, '->', placeTypeId);
+              }
+              return {
+                ...f,
+                properties: {
+                  ...f.properties,
+                  placeTypeId,
+                  placeName: f.properties?.nombre_lugar ?? f.properties?.placeName,
+                },
+              };
+            }
+            return f;
+          }),
+        };
+        if (process.env.NODE_ENV !== 'production') {
+          // Log keys de iconMap
+          console.log('[EditMapContext] iconMap keys:', Array.from((MapUtils as any).iconMap?.keys?.() ?? []));
         }
+        MapManager.drawPlaces(map, fc, { mode: 'multi' });
       });
-    });
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
+      // Cleanup
+      return () => {
+        cancelled = true;
+        if (mapRef.current) {
+          mapRef.current.remove();
+          mapRef.current = null;
+        }
+      };
+    })();
   }, [geojson, mapStyle]);
 
   return (
