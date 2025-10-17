@@ -28,7 +28,7 @@ export async function GET() {
       nombres: row.nombres,
       apellidos: row.apellidos,
     }));
-    logger.info("Usuarios obtenidos:", payload);
+    logger.info("Usuarios obtenidos correctamente");
     const res = NextResponse.json(payload, { status: 200 });
     res.headers.set("Cache-Control", "no-store");
     return res;

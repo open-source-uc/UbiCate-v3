@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
     }
 
     const countResult = await query.get<{ total: number }>(countSql, countParams);
-    logger.info("Conteo total de histórico de rutas:", countResult?.total); 
+    logger.info("Conteo total de histórico de rutas:");
     return NextResponse.json({
       success: true,
       data: rows,

@@ -57,7 +57,7 @@ export async function GET() {
       const fc = toFeatureCollection(campus.geojson) ?? EMPTY_FC;
       return { ...campus, featureCollection: fc };
     });
-    logger.info("Consulta de campus completada:", normalized);
+    logger.info("Consulta de campus completada");
     return NextResponse.json(normalized, {
       status: 200,
       headers: { "Cache-Control": "no-store" },

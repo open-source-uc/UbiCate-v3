@@ -21,7 +21,7 @@ export async function GET() {
     const sql = await fs.readFile(sqlPath, "utf8");
 
     const rows = await query.all<RouteType>(sql);
-    logger.info("Tipo de Rutas conseguidas:", rows);
+    logger.info("Tipo de Rutas conseguidas");
     return NextResponse.json(rows, {
       status: 200,
     });

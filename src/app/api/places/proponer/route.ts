@@ -175,11 +175,11 @@ export async function POST(req: NextRequest) {
     const usuario = await obtenerUsuarioAutenticado();
     await registrarHistorico({
       idUbicacion: id_lugar,
-      nombreUsuario: usuario?.nombreCompleto || 'Usuario',
+      nombreUsuario: usuario?.nombreCompleto ?? 'Público',
       tipoOperacion: 'CREAR',
       nombreElemento: punto.nombre || 'Sin nombre'
     });
-    logger.info(`[API] Lugar propuesto ID: ${id_lugar} por usuario: ${usuario?.nombreCompleto}`);
+    logger.info(`[API] Lugar propuesto ID: ${id_lugar} por usuario: ${usuario?.nombreCompleto ?? 'Público'}`);
     return NextResponse.json({ id_lugar, id_punto_interes: lastPI.id_punto_interes }, { status: 201 });
 
   } catch (err: unknown) {

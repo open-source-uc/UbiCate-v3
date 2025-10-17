@@ -35,7 +35,7 @@ export async function GET() {
       };
     });
     
-    logger.info("Consulta de rutas publicadas completada:", normalized);
+    logger.info("Consulta de rutas publicadas completada:");
     return NextResponse.json(normalized, {
       status: 200,
       headers: { "Cache-Control": "no-store" },

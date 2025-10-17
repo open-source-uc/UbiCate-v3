@@ -11,7 +11,7 @@ export async function GET() {
     `;
     
     const campuses = query.all(campusQuery);
-    logger.info('Campus consultados exitosamente', { count: campuses.length });
+    logger.info('Campus consultados exitosamente');
     return NextResponse.json(campuses);
   } catch (error) {
     logger.error('Error consultando los campuses:', error);

@@ -48,7 +48,7 @@ export async function GET(
                     routePlace.id_ruta === route.id_ruta)
                     .map(routePlace => routePlace.id_lugar)
     };
-    logger.info("Consulta de ruta por ID completada:", normalized);
+    logger.info("Consulta de ruta por ID completada:");
     return NextResponse.json(normalized, {
       status: 200,
       headers: { "Cache-Control": "no-store" },

@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       historico = await obtenerHistoricoCompleto(limit, offset);
     }
     
-    logger.info("Consulta de histórico completada:", historico);
+    logger.info("Consulta de histórico completada:");
     return NextResponse.json({
       success: true,
       data: historico,

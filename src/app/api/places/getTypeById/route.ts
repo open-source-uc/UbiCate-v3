@@ -21,7 +21,7 @@ export async function GET(req: Request) {
       logger.error("Tipo no encontrado");
       return NextResponse.json({ error: "Tipo no encontrado" }, { status: 404 });
     }
-    logger.info("Tipo obtenido por ID:", result);
+    logger.info("Tipo obtenido por ID:");
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     logger.error("Error al obtener el tipo por ID:", error);

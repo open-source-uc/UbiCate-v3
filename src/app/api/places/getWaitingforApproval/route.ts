@@ -29,8 +29,7 @@ export async function GET() {
       const imgs = query.all<Image>(image_sql, place.id_ubicacion_geografica).map((img) => ({
         ...img,
         binario: `data:${img.mime_type};base64,${Buffer.from(img.binario).toString("base64")}`,
-      }));
-      logger.info("GeoJSON normalizado:", fc);  
+      })); 
       return {
         ...place,
         featureCollection: fc,
@@ -38,7 +37,7 @@ export async function GET() {
       };
       });
 
-    logger.info("Consulta de lugares por aprobar completada:", normalized);
+    logger.info("Consulta de lugares por aprobar completada");
     return NextResponse.json(normalized, {
       status: 200,
       headers: { "Cache-Control": "no-store" },

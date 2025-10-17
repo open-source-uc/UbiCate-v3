@@ -13,7 +13,7 @@ export async function GET() {
     const sql = await fs.readFile(sqlPath, "utf8");
 
     const rows = await query.all<PlaceName>(sql);
-    logger.info("Tipos de lugar obtenidos:", rows);
+    logger.info("Tipos de lugar obtenidos");
     return NextResponse.json(rows, {
       status: 200,
     });
