@@ -1,3 +1,4 @@
+import logger from "@/app/lib/logger";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -9,12 +10,14 @@ export async function GET(
     const { rut } = await context.params;
 
     if (!rut) {
+      logger.error("Falta RUT");
       return NextResponse.json({ error: "Falta RUT" }, { status: 400 });
     }
 
     const apiUrl = process.env.MDI_PERSONA_BASICO;
 
     if (!apiUrl) {
+      logger.error("API URL no definida");
       return NextResponse.json({ error: "API URL no definida" }, { status: 500 });
     }
 
@@ -34,7 +37,7 @@ export async function GET(
     } else if (typeof error === "string") {
       message = error;
     }
-
+    logger.error("[API] personaBasico:", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

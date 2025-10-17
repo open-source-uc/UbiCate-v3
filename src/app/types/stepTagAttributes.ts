@@ -5,6 +5,7 @@ export const StepTagAttributes = {
     display: "flex",
     flexDirection: "column",
     marginBottom: 0,
-    paddingBottom: 100
+    paddingBottom: 120,
+    paddingTop: 20
   } as React.CSSProperties
 };

@@ -5,6 +5,7 @@ import { query } from "../../../lib/db";
 import { promises as fs } from "fs";
 import path from "node:path";
 import { UsuarioRow } from "@/app/types/usuarioType";
+import logger from "@/app/lib/logger";
 
 
 export async function GET() {
@@ -14,6 +15,7 @@ export async function GET() {
 
   try {
     if (!rows || rows.length === 0) {
+      logger.info("No hay usuarios");
       return NextResponse.json({ error: "No hay usuarios" }, { status: 404 });
     }
 
@@ -26,12 +28,12 @@ export async function GET() {
       nombres: row.nombres,
       apellidos: row.apellidos,
     }));
-
+    logger.info("Usuarios obtenidos:", payload);
     const res = NextResponse.json(payload, { status: 200 });
     res.headers.set("Cache-Control", "no-store");
     return res;
   } catch (e) {
-    console.error("[DB] Error:", e);
+    logger.error("[DB] Error:", e);
     return NextResponse.json({ error: "Error consultando BD" }, { status: 500 });
   }
 }

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "node:path";
 import { query } from "../../lib/db";
+import logger from "@/app/lib/logger";
 
 async function readSQL(file: string) {
   const p = path.join(process.cwd(), "src", "sql", file);
@@ -17,7 +18,8 @@ export async function POST(req: NextRequest) {
     const { email, sugerencia, nombres, apellidos } = body || {};
 
     if (!email || !sugerencia || !nombres || !apellidos) {
-      return NextResponse.json({ message: "Payload incompleto" }, { status: 400 });
+      logger.error("Payload incompleto, faltan campos requeridos");
+      return NextResponse.json({ message: "Payload incompleto, faltan campos requeridos" }, { status: 400 });
     }
 
     // leer scripts SQL
@@ -33,11 +35,12 @@ export async function POST(req: NextRequest) {
     const lastSug = query.get<{ id_sugerencia: number }>(sqlGetLastSugerencia);
     if (!lastSug?.id_sugerencia) {
       query.run("ROLLBACK");
+      logger.error("No se pudo guardar la sugerencia");
       return NextResponse.json({ message: "No se pudo guardar la sugerencia" }, { status: 500 });
     }
 
     query.run("COMMIT");
-
+    logger.info(`Sugerencia guardada ID: ${lastSug.id_sugerencia} de ${email}`);
     return NextResponse.json(
       { id_sugerencia: lastSug.id_sugerencia },
       { status: 201 }
@@ -46,7 +49,7 @@ export async function POST(req: NextRequest) {
     try {
       query.run("ROLLBACK");
     } catch {}
-    console.error("[API] sugerencia:", err);
+    logger.error("[API] sugerencia:", err);
     const message = err instanceof Error ? err.message : "Error al guardar sugerencia";
     return NextResponse.json({ message }, { status: 400 });
   }

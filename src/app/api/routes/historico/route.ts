@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/app/lib/db";
+import logger from "@/app/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -73,14 +74,14 @@ export async function GET(req: NextRequest) {
     }
 
     const countResult = await query.get<{ total: number }>(countSql, countParams);
-
+    logger.info("Conteo total de histórico de rutas:", countResult?.total); 
     return NextResponse.json({
       success: true,
       data: rows,
       count: countResult?.total || 0
     });
   } catch (error) {
-    console.error("[API] Error obteniendo histórico de rutas:", error);
+    logger.error("[API] Error obteniendo histórico de rutas:", error);
     return NextResponse.json(
       {
         success: false,

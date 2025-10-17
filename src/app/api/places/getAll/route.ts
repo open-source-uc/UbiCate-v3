@@ -7,6 +7,7 @@ import { query } from "@/app/lib/db";
 import type { FeatureCollection } from "geojson";
 import type { Place, Image } from "@/app/types/placeType";
 import MapUtils from "@/utils/MapUtils";
+import logger from "@/app/lib/logger";
 
 type DbPlaceRow = Place & { geojson: unknown };
 
@@ -20,19 +21,21 @@ export async function GET() {
         // Solo normaliza el geojson, no trae imágenes
     const normalized = placeRows.map((place) => {
       const fc = MapUtils.toFeatureCollection(place.geojson) ?? EMPTY_FC;
+      logger.info("GeoJSON normalizado:", fc);
       return {
         ...place,
         featureCollection: fc,
       };
     });
-
+    
+    logger.info("Consulta de lugares completada:", normalized);
     return NextResponse.json(normalized, {
       status: 200,
       headers: { "Cache-Control": "no-store" },
     });
     
   } catch (err) {
-    console.error("[DB] Error places:", err);
+    logger.error("[DB] Error places:", err);
     return NextResponse.json({ error: "Error consultando BD" }, { status: 500 });
   }
 }

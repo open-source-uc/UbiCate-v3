@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "node:path";
 import { query } from "../../lib/db";
+import logger from "../../lib/logger";
 
 async function readSQL(name: string) {
   const p = path.join(process.cwd(), "src", "sql", name);
@@ -36,7 +37,7 @@ export async function GET() {
       { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   } catch (err) {
-    console.error("[API] catalogos:", err);
+    logger.error("[API] catalogos:", err);
     return NextResponse.json({ error: "Error consultando BD" }, { status: 500 });
   }
 }

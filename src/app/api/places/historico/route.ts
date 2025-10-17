@@ -1,22 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { obtenerHistoricoCompleto, obtenerHistorico } from '@/app/lib/auditLog';
+import logger from '@/app/lib/logger';
 
 export const runtime = "nodejs";
 
-/**
- * GET /api/places/historico
- * Obtiene el histórico de cambios en lugares y rutas
- * 
- * Query params opcionales:
- * - id_ubicacion: filtrar por una ubicación específica
- * - limit: número de registros a devolver (default: 100)
- * - offset: número de registros a saltar para paginación (default: 0)
- * 
- * Ejemplos:
- * - GET /api/places/historico - Obtiene las últimas 100 entradas
- * - GET /api/places/historico?id_ubicacion=123 - Histórico de una ubicación específica
- * - GET /api/places/historico?limit=50&offset=0 - Primeras 50 entradas
- */
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
@@ -33,7 +20,8 @@ export async function GET(req: NextRequest) {
       // Histórico completo con paginación
       historico = await obtenerHistoricoCompleto(limit, offset);
     }
-
+    
+    logger.info("Consulta de histórico completada:", historico);
     return NextResponse.json({
       success: true,
       data: historico,
@@ -46,7 +34,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[API] Error obteniendo histórico:', error);
+    logger.error('[API] Error obteniendo histórico:', error);
     return NextResponse.json(
       { 
         success: false,

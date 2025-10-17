@@ -6,6 +6,7 @@ import path from "node:path";
 import { query } from "../../lib/db";
 import type { Feature, FeatureCollection } from "geojson";
 import type { Campus } from "@/app/types/campusType";
+import logger from "@/app/lib/logger";
 
 type DbCampusRow = Campus & { geojson: unknown };
 
@@ -56,13 +57,13 @@ export async function GET() {
       const fc = toFeatureCollection(campus.geojson) ?? EMPTY_FC;
       return { ...campus, featureCollection: fc };
     });
-
+    logger.info("Consulta de campus completada:", normalized);
     return NextResponse.json(normalized, {
       status: 200,
       headers: { "Cache-Control": "no-store" },
     });
   } catch (err) {
-    console.error("[DB] Error campus:", err);
+    logger.error("[DB] Error campus:", err);
     return NextResponse.json({ error: "Error consultando BD" }, { status: 500 });
   }
 }

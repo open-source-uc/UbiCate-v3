@@ -1,6 +1,8 @@
 export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "../../lib/db";
+import logger from "@/app/lib/logger";
+
 type UsuarioRow = {
   id_usuario: number;
   uid: string | null;
@@ -10,7 +12,10 @@ type UsuarioRow = {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const uid = searchParams.get("uid");
-  if (!uid) return NextResponse.json({ error: "Falta ?uid" }, { status: 400 });
+  if (!uid) {
+    logger.error("Falta uid");
+    return NextResponse.json({ error: "Falta uid" }, { status: 400 });
+  }
   try {
     const row = query.get<UsuarioRow>(
       `
@@ -22,6 +27,7 @@ export async function GET(req: NextRequest) {
       [uid]
     );
     if (!row) {
+      logger.error("Usuario no encontrado");
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
     }
     const payload = {
@@ -31,9 +37,10 @@ export async function GET(req: NextRequest) {
     };
     const res = NextResponse.json(payload, { status: 200 });
     res.headers.set("Cache-Control", "no-store");
+    logger.info("Usuario obtenido por UID:", payload);
     return res;
   } catch (e) {
-    console.error("[DB] Error:", e);
+    logger.error("[DB] Error:", e);
     return NextResponse.json({ error: "Error consultando BD" }, { status: 500 });
   }
 }

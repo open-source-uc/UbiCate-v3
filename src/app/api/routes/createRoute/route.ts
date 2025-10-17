@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from "@/app/lib/db";
 import { registrarHistoricoRuta } from "@/app/lib/auditLog";
 import { obtenerUsuarioAutenticado } from "@/app/lib/auth";
+import logger from '@/app/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
 
     // Validation
     if (!nombre_ruta || !id_campus) {
+      logger.error("Nombre de ruta y campus son requeridos");
       return NextResponse.json({ 
         success: false, 
         message: 'Nombre de ruta y campus son requeridos' 
@@ -48,8 +50,8 @@ export async function POST(request: NextRequest) {
     const estadoResult = query.get<{ id_estado_ubicacion_geografica: number }>(getIdEstadoSql);
     const tipoGeojsonResult = query.get<{ id_tipo_geojson: number }>(getIdTipoGeojsonSql, ['Ruta']);
 
-    console.log("Estado result:", estadoResult);
-    console.log("Tipo geojson result:", tipoGeojsonResult);
+    logger.info("Estado result:", estadoResult);
+    logger.info("Tipo geojson result:", tipoGeojsonResult);
 
     if (!estadoResult || !tipoGeojsonResult) {
       return NextResponse.json({ 
@@ -76,6 +78,7 @@ export async function POST(request: NextRequest) {
       const ubicacionId = ubicacionResult?.id;
 
       if (!ubicacionId) {
+        logger.error("Error obteniendo ID de ubicación insertada");
         throw new Error('Error obteniendo ID de ubicación insertada');
       }
 
@@ -87,6 +90,7 @@ export async function POST(request: NextRequest) {
       const rutaId = rutaResult?.id;
 
       if (!rutaId) {
+        logger.error("Error obteniendo ID de ruta insertada");
         throw new Error('Error obteniendo ID de ruta insertada');
       }
 
@@ -100,7 +104,7 @@ export async function POST(request: NextRequest) {
       return rutaId;
     });
 
-    console.log("Transaction completed, ruta ID:", result);
+    logger.info("Transaction completed, ruta ID:", result);
 
     // Obtener usuario autenticado
     const usuario = await obtenerUsuarioAutenticado();
@@ -113,7 +117,7 @@ export async function POST(request: NextRequest) {
       tipoOperacion: 'CREAR',
       nombreRuta: nombre_ruta
     });
-
+    logger.info(`[API] Ruta creada ID: ${result} por usuario: ${nombreUsuario}`);
     return NextResponse.json({ 
       success: true, 
       message: 'Ruta creada exitosamente',
@@ -121,9 +125,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[DB] Error creating route:', error);
-    return NextResponse.json({ 
-      success: false, 
+    logger.error('[DB] Error creating route:', error);
+    return NextResponse.json({
+      success: false,
       message: 'Error al crear ruta',
       error: typeof error === "object" && error !== null && "message" in error ? (error as { message: string }).message : String(error)
     }, { status: 500 });

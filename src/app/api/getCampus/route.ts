@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/app/lib/db';
+import logger from '@/app/lib/logger';
 
 export async function GET() {
   try {
@@ -10,10 +11,10 @@ export async function GET() {
     `;
     
     const campuses = query.all(campusQuery);
-    
+    logger.info('Campus consultados exitosamente', { count: campuses.length });
     return NextResponse.json(campuses);
   } catch (error) {
-    console.error('Error fetching campuses:', error);
+    logger.error('Error consultando los campuses:', error);
     return NextResponse.json(
       { message: 'Error interno del servidor' },
       { status: 500 }

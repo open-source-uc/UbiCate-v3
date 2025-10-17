@@ -7,6 +7,7 @@ import { obtenerUsuarioAutenticado } from "@/app/lib/auth";
 import type { FeatureCollection } from "geojson";
 import type { Place, Image } from "@/app/types/placeType";
 import MapUtils from "@/utils/MapUtils";
+import logger from "@/app/lib/logger";
 
 type DbPlaceRow = Place & { geojson: unknown };
 
@@ -19,6 +20,7 @@ export async function PUT(req: NextRequest, context: any) {
     const params = await context.params;
     const id = Number(params.id);
     if (isNaN(id)) {
+      logger.error("ID inválido");
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
 
@@ -45,6 +47,7 @@ export async function PUT(req: NextRequest, context: any) {
     );
     const id_ubicacion_geografica = ubicacionRow?.fk_id_ubicacion_geografica;
     if (!id_ubicacion_geografica) {
+      logger.error("Ubicación no encontrada");
       return NextResponse.json(
         { error: "Ubicación no encontrada" },
         { status: 404 }
@@ -116,10 +119,10 @@ export async function PUT(req: NextRequest, context: any) {
       tipoOperacion: 'ACTUALIZAR',
       nombreElemento: lugarNombre?.nombre_lugar || body.nombre_lugar || 'Sin nombre'
     });
-
+    logger.info(`[DB] Lugar actualizado ID: ${id} por usuario: ${usuario?.nombreCompleto}`);
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[DB] Error actualizando lugar:", err);
+    logger.error("[DB] Error actualizando lugar:", err);
     return NextResponse.json(
       { error: "Error actualizando BD" },
       { status: 500 }
@@ -132,6 +135,7 @@ export async function GET(req: NextRequest, context: any) {
     const params = await context.params;
     const id = Number(params.id);
     if (isNaN(id)) {
+      logger.error("ID inválido");
       return NextResponse.json({ error: "ID inválido" }, { status: 400 });
     }
 
@@ -146,6 +150,7 @@ export async function GET(req: NextRequest, context: any) {
 
     const placeRow = query.get<DbPlaceRow>(place_sql, [id]);
     if (!placeRow) {
+      logger.error("Lugar no encontrado");
       return NextResponse.json(
         { error: "Lugar no encontrado" },
         { status: 404 }
@@ -158,7 +163,7 @@ export async function GET(req: NextRequest, context: any) {
 
     const descripcion = placeRow.descripcion || (placeRow as any).ug_descripcion;
     const fc = MapUtils.toFeatureCollection(placeRow.geojson) ?? EMPTY_FC;
-
+    logger.info(`[DB] Lugar obtenido ID: ${id}`);
     return NextResponse.json({
       ...placeRow,
       descripcion,
@@ -169,7 +174,7 @@ export async function GET(req: NextRequest, context: any) {
       })),
     });
   } catch (err) {
-    console.error("[DB] Error get place:", err);
+    logger.error("[DB] Error get place:", err);
     return NextResponse.json(
       { error: "Error consultando BD" },
       { status: 500 }

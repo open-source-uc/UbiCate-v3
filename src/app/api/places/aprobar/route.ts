@@ -2,16 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/app/lib/db';
 import { registrarHistorico } from '@/app/lib/auditLog';
 import { obtenerUsuarioAutenticado } from '@/app/lib/auth';
+import logger from '@/app/lib/logger';
 
 export async function POST(req: NextRequest) {
   const { id, nombreLugar } = await req.json();
-  
-  if (!id) return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
-  
+  if (!id) {
+    logger.error('ID requerido');
+    return NextResponse.json({ error: 'ID requerido' }, { status: 400 });
+  }
+
   try {
     // Obtener usuario autenticado
     const usuario = await obtenerUsuarioAutenticado();
     if (!usuario) {
+      logger.error('No autenticado');
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
@@ -38,10 +42,11 @@ export async function POST(req: NextRequest) {
       tipoOperacion: 'APROBAR',
       nombreElemento
     });
+    logger.info(`[API] Lugar aprobado ID: ${id} por usuario: ${usuario.nombreCompleto}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[API] Error al aprobar:', error);
+    logger.error('[API] Error al aprobar:', error);
     return NextResponse.json({ error: 'Error al aprobar' }, { status: 500 });
   }
 }

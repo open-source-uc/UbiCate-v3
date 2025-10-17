@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/app/lib/db"; // 👈 ajusta si tu path es distinto
+import logger from "@/app/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
     } = body || {};
 
     const apellidos = `${primerApellido ?? ""} ${segundoApellido ?? ""}`.trim();
-
+    logger.info("Insertando usuario con los siguientes datos:");
     console.log(`rut: ${rut} `);
     console.log(`dv: ${dv}`);
     console.log(`nombres: ${nombres}`);
@@ -33,13 +34,14 @@ export async function POST(req: NextRequest) {
 
     // 🔹 Validación mínima
     if (!rut || !dv || !nombres || !apellidos || !nombreUsuario) {
+      logger.error("Faltan datos obligatorios");
       return NextResponse.json(
         { 
           success: false, 
           message: "Se ha producido un error al momento de ingresar al usuario",
           type: "error" // 👈 nuevo campo
         },
-        { status: 200 } // ✅ 200 porque no es un error técnico
+        { status: 400 }
       );
     }
 
@@ -47,13 +49,14 @@ export async function POST(req: NextRequest) {
     const rows = (await query.all(`SELECT COUNT(*) as count FROM usuario WHERE uid = ?`, [nombreUsuario])) as UserCheckRow[];
 
     if (rows[0].count > 0) {
+      logger.warn(`El usuario ${nombreUsuario} ya existe en la base de datos.`);
       return NextResponse.json(
         { 
           success: false, 
           message: "El usuario ya existe en la Plataforma Central de Datos",
           type: "warning" // 👈 nuevo campo
         },
-        { status: 200 } // ✅ 200 porque no es un error técnico
+        { status: 400 }
       );
     }else {
       const sql = `
@@ -69,7 +72,7 @@ export async function POST(req: NextRequest) {
         nombres,
         apellidos,
       ]);
-
+      logger.info(`Usuario ${nombreUsuario} insertado correctamente.`);
       return NextResponse.json(
         { success: true, message: "Usuario insertado correctamente" },
         { status: 201 }
@@ -77,7 +80,6 @@ export async function POST(req: NextRequest) {
     }
 
   } catch (err: unknown) {
-    console.error("[API] insertAdmins error:", err);
 
     let message = "Error al guardar usuario";
 
@@ -86,7 +88,8 @@ export async function POST(req: NextRequest) {
     } else if (typeof err === "string") {
       message = err;
     }
-
+    
+    logger.error("[API] insertAdmins error:", message);
     return NextResponse.json(
       { success: false, message },
       { status: 500 }

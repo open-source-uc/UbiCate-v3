@@ -7,6 +7,7 @@ import { query } from "../../../lib/db";
 import { registrarHistorico } from "@/app/lib/auditLog";
 import { obtenerUsuarioAutenticado } from "@/app/lib/auth";
 import type * as GeoJSON from "geojson";
+import logger from "@/app/lib/logger";
 
 async function readSQL(file: string) {
   const p = path.join(process.cwd(), "src", "sql", file);
@@ -19,6 +20,7 @@ function mapGeomToNombre(geomType?: string): "Marcador" | "Polígono" | "Ruta" {
     case "Polygon": return "Polígono";
     case "LineString": return "Ruta";
     default:
+      logger.error(`geometry.type no soportado: ${geomType ?? "undefined"}`);
       throw new Error(`geometry.type no soportado: ${geomType ?? "undefined"}`);
   }
 }
@@ -29,23 +31,28 @@ export async function POST(req: NextRequest) {
     const { descripcion, geojsonRaw, punto, imagenes } = body || {};
 
     if (!descripcion || !geojsonRaw || !punto) {
+      logger.error("Payload incompleto:", { descripcion, geojsonRaw, punto });
       return NextResponse.json({ message: "Payload incompleto" }, { status: 400 });
     }
     if (!punto.nombre || !punto.id_tipo_lugar || !punto.piso_punto || !punto.id_campus) {
+      logger.error("Datos de punto_interes incompletos:", punto);
       return NextResponse.json({ message: "Datos de punto_interes incompletos" }, { status: 400 });
     }
 
     if (imagenes && !Array.isArray(imagenes)) {
+      logger.error("'imagenes' debe ser un arreglo base64");
       return NextResponse.json({ message: "'imagenes' debe ser un arreglo base64" }, { status: 400 });
     }
 
     if (imagenes?.length) {
       for (const [index, img] of imagenes.entries()) {
         if (typeof img?.base64 !== "string" || !img.base64.startsWith("data:image/")) {
+          logger.error(`La imagen #${index + 1} no es un base64 válido`);
           return NextResponse.json({ message: `La imagen #${index + 1} no es un base64 válido` }, { status: 400 });
         }
         const estimatedSizeBytes = (img.base64.length * 3) / 4;
         if (estimatedSizeBytes > 3 * 1024 * 1024) {
+          logger.error(`La imagen #${index + 1} excede los 3MB permitidos`);
           return NextResponse.json({ message: `La imagen #${index + 1} excede los 3MB permitidos` }, { status: 400 });
         }
       }
@@ -55,6 +62,7 @@ export async function POST(req: NextRequest) {
     try {
       geoParsed = JSON.parse(geojsonRaw);
     } catch {
+      logger.error("El formato del GeoJSON no es válido.");
       return NextResponse.json({ message: "El formato del GeoJSON no es válido." }, { status: 400 });
     }
 
@@ -65,6 +73,7 @@ export async function POST(req: NextRequest) {
         : geoParsed?.geometry?.type;
 
     if (!geomType) {
+      logger.error("GeoJSON sin geometry.type");
       return NextResponse.json({ message: "GeoJSON sin geometry.type" }, { status: 400 });
     }
 
@@ -90,12 +99,14 @@ export async function POST(req: NextRequest) {
 
     const rowEstado = query.get<{ id_estado_ubicacion_geografica: number }>(sqlGetIdEstadoEnEspera);
     if (!rowEstado?.id_estado_ubicacion_geografica) {
+      logger.error("No existe estado 'en espera' en la BD");
       return NextResponse.json({ message: "No existe estado 'en espera' en la BD" }, { status: 500 });
     }
     const id_estado_lugar = rowEstado.id_estado_ubicacion_geografica;
 
     const rowTipo = query.get<{ id_tipo_geojson: number }>(sqlGetIdTipoGeojsonByNombre, [nombreTipo]);
     if (!rowTipo?.id_tipo_geojson) {
+      logger.error(`tipo_geojson desconocido para '${nombreTipo}'`);
       return NextResponse.json({ message: `tipo_geojson desconocido para '${nombreTipo}'` }, { status: 400 });
     }
     const id_tipo_geojson = rowTipo.id_tipo_geojson;
@@ -111,6 +122,7 @@ export async function POST(req: NextRequest) {
     const lastLugar = query.get<{ id_lugar: number }>(sqlGetLastLugar);
     if (!lastLugar?.id_lugar) {
       query.run("ROLLBACK");
+      logger.error("No se pudo insertar el lugar");
       return NextResponse.json({ message: "No se pudo insertar el lugar" }, { status: 500 });
     }
     const id_lugar = lastLugar.id_lugar;
@@ -119,6 +131,7 @@ export async function POST(req: NextRequest) {
     const v2 = query.get(`SELECT 1 FROM campus WHERE id_campus = ? LIMIT 1;`, [punto.id_campus]);
     if (!v1 || !v2) {
       query.run("ROLLBACK");
+      logger.error("FK inválida en tipo_lugar o campus");
       return NextResponse.json({ message: "FK inválida en tipo_lugar o campus" }, { status: 400 });
     }
 
@@ -131,6 +144,7 @@ export async function POST(req: NextRequest) {
     const lastPI = query.get<{ id_punto_interes: number }>(sqlGetLastPuntoInteres);
     if (!lastPI?.id_punto_interes) {
       query.run("ROLLBACK");
+      logger.error("No se pudo insertar el punto de interés");
       return NextResponse.json({ message: "No se pudo insertar el punto de interés" }, { status: 500 });
     }
 
@@ -143,6 +157,7 @@ export async function POST(req: NextRequest) {
         const match = img.base64.match(/^data:(image\/\w+);base64,(.+)$/);
         if (!match) {
           query.run("ROLLBACK");
+          logger.error(`La imagen #${idx + 1} no tiene un formato base64 válido`);
           return NextResponse.json({ message: `La imagen #${idx + 1} no tiene un formato base64 válido` }, { status: 400 });
         }
 
@@ -164,12 +179,12 @@ export async function POST(req: NextRequest) {
       tipoOperacion: 'CREAR',
       nombreElemento: punto.nombre || 'Sin nombre'
     });
-
+    logger.info(`[API] Lugar propuesto ID: ${id_lugar} por usuario: ${usuario?.nombreCompleto}`);
     return NextResponse.json({ id_lugar, id_punto_interes: lastPI.id_punto_interes }, { status: 201 });
 
   } catch (err: unknown) {
     try { query.run("ROLLBACK"); } catch {}
-    console.error("[API] proponer lugar:", err);
+    logger.error("[API] proponer lugar:", err);
     const message = err instanceof Error ? err.message : "Error al guardar";
     return NextResponse.json({ message }, { status: 400 });
   }

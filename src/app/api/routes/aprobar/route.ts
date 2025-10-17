@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/app/lib/db";
 import { registrarHistoricoRuta } from "@/app/lib/auditLog";
 import { obtenerUsuarioAutenticado } from "@/app/lib/auth";
+import logger from "@/app/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -10,6 +11,7 @@ export async function POST(request: NextRequest) {
     const { id_ruta } = await request.json();
 
     if (!id_ruta) {
+      logger.error("ID de ruta requerido");
       return NextResponse.json(
         { error: "ID de ruta requerido" },
         { status: 400 }
@@ -46,14 +48,14 @@ export async function POST(request: NextRequest) {
       tipoOperacion: 'APROBAR',
       nombreRuta: rutaInfo?.nombre_ruta || 'Ruta sin nombre'
     });
-
+    logger.info(`[API] Ruta aprobada ID: ${id_ruta} por usuario: ${nombreUsuario}`);
     return NextResponse.json({ 
       success: true, 
       message: "Ruta aprobada exitosamente" 
     });
 
   } catch (error) {
-    console.error("Error approving route:", error);
+    logger.error("Error approving route:", error);  
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

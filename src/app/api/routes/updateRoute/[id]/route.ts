@@ -6,6 +6,7 @@ import path from 'node:path';
 import { query } from '@/app/lib/db';
 import { registrarHistoricoRuta } from '@/app/lib/auditLog';
 import { obtenerUsuarioAutenticado } from '@/app/lib/auth';
+import logger from '@/app/lib/logger';
 
 export async function PUT(
   request: NextRequest,
@@ -18,6 +19,7 @@ export async function PUT(
     const { nombre_ruta, descripcion, id_campus, placeIds, geojson, icono, color_icono } = body;
 
     if (!routeId || !nombre_ruta || !id_campus) {
+      logger.error("Faltan campos requeridos: nombre_ruta, id_campus");
       return NextResponse.json(
         { message: 'Faltan campos requeridos: nombre_ruta, id_campus' },
         { status: 400 }
@@ -51,6 +53,7 @@ export async function PUT(
       const ubicacionResult = query.get(getRutaUbicacionSQL, [routeId]) as { fk_id_ubicacion_geografica: number } | undefined;
       
       if (!ubicacionResult) {
+        logger.error("Ruta no encontrada");
         return NextResponse.json(
           { message: 'Ruta no encontrada' },
           { status: 404 }
@@ -95,19 +98,19 @@ export async function PUT(
         tipoOperacion: 'ACTUALIZAR',
         nombreRuta: nombre_ruta
       });
-
+      logger.info(`[API] Ruta actualizada ID: ${routeId} por usuario: ${nombreUsuario}`);
       return NextResponse.json({
         message: 'Ruta actualizada exitosamente',
         id_ruta: routeId
       });
 
     } catch (error) {
-      console.error('Database error:', error);
+      logger.error('Database error:', error);
       throw error;
     }
 
   } catch (error) {
-    console.error('Error updating route:', error);
+    logger.error('Error updating route:', error);
     return NextResponse.json(
       { message: 'Error interno del servidor' },
       { status: 500 }
