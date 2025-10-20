@@ -1,6 +1,6 @@
 export const runtime = "nodejs";
 
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { promises as fs } from "fs";
 import path from "node:path";
 import { query } from "@/app/lib/db";
@@ -13,8 +13,12 @@ import logger from "@/app/lib/logger";
 
 const EMPTY_FC: FeatureCollection = { type: "FeatureCollection", features: [] };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Obtener el parámetro campusId de la query
+    const { searchParams } = new URL(request.url);
+    const campusId = searchParams.get('campusId');
+
     const sqlPathRoutes = path.join(process.cwd(), "src", "sql", "getRoutes.sql");
     const sqlRoutes = await fs.readFile(sqlPathRoutes, "utf8");
 
@@ -24,7 +28,12 @@ export async function GET() {
     const routeRows = query.all<Route>(sqlRoutes);
     const routePlacesRows = query.all<RoutePlaces>(sqlRoutePlaces);
 
-    const normalized = routeRows.map((route) => {
+    // Filtrar por campusId si se proporciona
+    const filteredRoutes = campusId 
+      ? routeRows.filter(route => route.id_campus === parseInt(campusId))
+      : routeRows;
+
+    const normalized = filteredRoutes.map((route) => {
       const fc = MapUtils.toFeatureCollection(route.geojson) ?? EMPTY_FC;
       return { 
         ...route, 
@@ -35,7 +44,7 @@ export async function GET() {
       };
     });
     
-    logger.info("Consulta de rutas publicadas completada:");
+    logger.info(`Consulta de rutas publicadas completada${campusId ? ` (Campus ID: ${campusId})` : ''}: ${normalized.length} rutas`);
     return NextResponse.json(normalized, {
       status: 200,
       headers: { "Cache-Control": "no-store" },

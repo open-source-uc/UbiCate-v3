@@ -24,6 +24,46 @@ const toFeatureCollection = (g: any): GeoJSON.FeatureCollection => {
   return { type: "FeatureCollection", features: [] };
 };
 
+// Helper function to get centroid of a polygon or multipolygon
+const getCentroid = (geometry: any): [number, number] | null => {
+  if (geometry.type === "Polygon") {
+    const coords = geometry.coordinates[0];
+    let x = 0, y = 0;
+    for (const [lng, lat] of coords) {
+      x += lng;
+      y += lat;
+    }
+    return [x / coords.length, y / coords.length];
+  } else if (geometry.type === "MultiPolygon") {
+    const allCoords = geometry.coordinates.flat()[0];
+    if (!allCoords) return null;
+    let x = 0, y = 0;
+    for (const [lng, lat] of allCoords) {
+      x += lng;
+      y += lat;
+    }
+    return [x / allCoords.length, y / allCoords.length];
+  } else if (geometry.type === "LineString") {
+    const coords = geometry.coordinates;
+    let x = 0, y = 0;
+    for (const [lng, lat] of coords) {
+      x += lng;
+      y += lat;
+    }
+    return [x / coords.length, y / coords.length];
+  } else if (geometry.type === "MultiLineString") {
+    const allCoords = geometry.coordinates.flat();
+    if (!allCoords.length) return null;
+    let x = 0, y = 0;
+    for (const [lng, lat] of allCoords) {
+      x += lng;
+      y += lat;
+    }
+    return [x / allCoords.length, y / allCoords.length];
+  }
+  return null;
+};
+
 type CampusWithGeo = Campus & {
   featureCollection?: FeatureCollection;
   geojson?: unknown;
@@ -68,12 +108,16 @@ export const MapProvider = ({ children }: { children: React.ReactNode }) => {
   const [routes, setRoutes] = useState<RouteWithGeo[]>([]);
   const [currentCampus, setCurrentCampus] = useState<CampusWithGeo | null>(null);
   const [activeRoute, setActiveRoute] = useState<RouteWithGeo | null>(null);
+  const [allRoutesLoaded, setAllRoutesLoaded] = useState(false);
   const searchParams = useSearchParams();
 const sharedLocationRef = useRef<{ lat: number; lng: number } | null>(null);
+const initialMapCenterRef = useRef<{ center: [number, number]; zoom: number } | null>(null);
 
 useEffect(() => {
   const latParam = searchParams.get('lat');
   const lngParam = searchParams.get('lng');
+  const placeId = searchParams.get('placeId');
+  const routeId = searchParams.get('routeId');
   
   if (latParam && lngParam) {
     const lat = parseFloat(latParam);
@@ -81,7 +125,14 @@ useEffect(() => {
     
     if (!isNaN(lat) && !isNaN(lng)) {
       sharedLocationRef.current = { lat, lng };
+      initialMapCenterRef.current = { center: [lng, lat], zoom: 18 };
     }
+  } else if (placeId || routeId) {
+    // Guardar IDs para extraer coordenadas después cuando carguen los datos
+    (window as any).__sharedPlaceId = placeId;
+    (window as any).__sharedRouteId = routeId;
+    // NO establecer centro aquí, se actualizará cuando carguen los datos
+    // initialMapCenterRef.current NO se establece, el mapa esperará a los datos
   }
 }, [searchParams]);
 
@@ -98,14 +149,17 @@ useEffect(() => {
 
   mapboxgl.accessToken = mapboxApiKey;
   try {
-    // Inicializar mapa directamente en San Joaquín
-    const SAN_JOAQUIN_CENTER: [number, number] = [-70.611, -33.498];
+    // Usar centro compartido si existe, sino usar San Joaquín por defecto
+    const initialConfig = initialMapCenterRef.current || { 
+      center: [-70.611, -33.498] as [number, number], 
+      zoom: 16 
+    };
     
     const map = new mapboxgl.Map({
       container: mapContainer.current!,
       style: MAPBOX_STYLE_URL,
-      center: SAN_JOAQUIN_CENTER,
-      zoom: 16,
+      center: initialConfig.center,
+      zoom: initialConfig.zoom,
     });
 
     const geolocate = new mapboxgl.GeolocateControl({
@@ -204,6 +258,49 @@ useEffect(() => {
           if (isMounted) {
             console.log(`[MapProvider] Lugares cargados (${data.length} registros).`);
             setPlaces(data);
+            
+            // Si hay un placeId compartido, encontrar sus coordenadas y actualizar centro del mapa
+            const sharedPlaceId = (window as any).__sharedPlaceId;
+            if (sharedPlaceId && mapRef.current) {
+              const place = data.find((p: any) => String(p.id_lugar) === String(sharedPlaceId));
+              if (place && place.featureCollection) {
+                try {
+                  const fc = toFeatureCollection(place.featureCollection);
+                  const firstFeature = fc.features?.[0];
+                  if (firstFeature?.geometry) {
+                    const coords = firstFeature.geometry.type === 'Point' 
+                      ? (firstFeature.geometry as any).coordinates
+                      : firstFeature.geometry.type === 'Polygon' || firstFeature.geometry.type === 'MultiPolygon'
+                        ? getCentroid((firstFeature.geometry as any))
+                        : null;
+                    
+                    if (coords) {
+                      initialMapCenterRef.current = { center: [coords[0], coords[1]], zoom: 18 };
+                      if (mapRef.current) {
+                        mapRef.current.setCenter([coords[0], coords[1]]);
+                        mapRef.current.setZoom(18);
+                      }
+                      console.log(`[MapProvider] Mapa centrado en lugar compartido: ${place.nombre_lugar}`);
+                    }
+                  }
+                } catch (err) {
+                  console.error('[MapProvider] Error centrando en lugar compartido:', err);
+                }
+              }
+            }
+          }
+          return data;
+        }),
+      
+      // Cargar todas las rutas (para poder buscar rutas compartidas)
+      fetch('/api/routes/published', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : Promise.reject(`Routes: ${res.status}`))
+        .then(data => {
+          if (isMounted) {
+            console.log(`[MapProvider] Todas las rutas cargadas (${data.length} registros).`);
+            // Guardar en window para poder acceder después
+            (window as any).__allRoutes = data;
+            setAllRoutesLoaded(true);
           }
           return data;
         })
@@ -235,6 +332,35 @@ useEffect(() => {
       setRoutes([]);
     }
   }, []);
+
+  // Detectar y centrar en ruta compartida (ejecutar cuando las rutas estén cargadas)
+  useEffect(() => {
+    const sharedRouteId = (window as any).__sharedRouteId;
+    if (sharedRouteId && mapRef.current && allRoutesLoaded) {
+      const allRoutes = (window as any).__allRoutes || [];
+      const route = allRoutes.find((r: any) => String(r.id_ruta) === String(sharedRouteId));
+      
+      if (route && route.featureCollection) {
+        try {
+          const fc = toFeatureCollection(route.featureCollection);
+          const firstFeature = fc.features?.[0];
+          if (firstFeature?.geometry) {
+            const coords = firstFeature.geometry.type === 'LineString' || firstFeature.geometry.type === 'MultiLineString'
+              ? getCentroid((firstFeature.geometry as any))
+              : null;
+            
+            if (coords && mapRef.current) {
+              mapRef.current.setCenter([coords[0], coords[1]]);
+              mapRef.current.setZoom(17);
+              console.log(`[MapProvider] Mapa centrado en ruta compartida: ${route.nombre_ruta}`);
+            }
+          }
+        } catch (err) {
+          console.error('[MapProvider] Error centrando en ruta compartida:', err);
+        }
+      }
+    }
+  }, [allRoutesLoaded]);
   
   const showPlaces = useCallback((placeTypeId: number) => {
     const map = mapRef.current;
@@ -377,13 +503,17 @@ useEffect(() => {
 
   useEffect(() => {
     if (loaded && campusData.length > 0) {
-      // Evitar flyToCampus(1) si la URL contiene un placeId compartido
+      // Evitar flyToCampus(1) si la URL contiene un link compartido (placeId o routeId)
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const placeId = params.get('placeId');
+        const routeId = params.get('routeId');
         const menu = params.get('menu');
-        if (placeId && !isNaN(Number(placeId)) && menu === 'PlaceDetailStep') {
-          // Hay un link compartido, no hacer flyToCampus(1)
+        
+        // Si hay un link compartido de lugar o ruta, no hacer flyToCampus(1)
+        if ((placeId && !isNaN(Number(placeId)) && menu === 'PlaceDetailStep') || 
+            (routeId && !isNaN(Number(routeId)) && menu === 'RouteDetailStep')) {
+          console.log('[MapProvider] Link compartido detectado, evitando fly to automático.');
           return;
         }
       }
