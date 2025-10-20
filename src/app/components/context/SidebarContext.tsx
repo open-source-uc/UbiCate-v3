@@ -103,7 +103,7 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
                     nombre_lugar: place.nombre_lugar,
                     id_tipo_lugar: place.id_tipo_lugar,
                     featureCollection: place.featureCollection
-                  }, { zoom: true });
+                  }, { zoom: false }); // Let MapContext handle positioning
                 }
                 // Dispatch event to prepare place data for sidebar
                 const payload = {
@@ -117,29 +117,9 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
                   window.dispatchEvent(new Event("sidebar:close"));
                 }
               };
-              // Si el campus del lugar no está en campusData o no es el actual, esperar a que esté activo
-              const campusId = place.id_campus;
-              const currentCampusId = campusData.find(c => c.id_campus === campusId);
-              if (!currentCampusId) {
-                flyToCampus(campusId);
-                // Esperar a que el campus esté activo antes de dibujar el punto
-                let retries = 0;
-                const waitForCampus = () => {
-                  const active = campusData.find(c => c.id_campus === campusId);
-                  if (active && mapRef.current) {
-                    setTimeout(drawPlace, 350); // pequeño delay para asegurar que el mapa terminó el fitBounds
-                  } else if (retries < 15) {
-                    retries++;
-                    setTimeout(waitForCampus, 100);
-                  } else {
-                    // Si no carga, igual intentamos dibujar
-                    drawPlace();
-                  }
-                };
-                waitForCampus();
-              } else {
-                drawPlace();
-              }
+              // For shared links: MapContext already handles centering
+              // Just draw the place and don't call flyToCampus
+              drawPlace();
             }
           })
           .catch(err => console.error("Error loading shared place:", err));
@@ -181,7 +161,7 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
                     nombre_ruta: route.nombre_ruta,
                     featureCollection: route.featureCollection,
                     placeIds: route.placeIds
-                  }, { zoom: true, showEndpoints: true });
+                  }, { zoom: false, showEndpoints: true }); // Let MapContext handle positioning
                 }
                 
                 // Esperar a que el mapa esté listo después de dibujar la ruta
@@ -241,29 +221,9 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
                   window.dispatchEvent(new Event("sidebar:close"));
                 }
               };
-              // Si el campus de la ruta no está en campusData, esperar a que esté activo
-              const campusId = route.id_campus;
-              const currentCampusId = campusData.find(c => c.id_campus === campusId);
-              if (!currentCampusId) {
-                flyToCampus(campusId);
-                // Esperar a que el campus esté activo antes de dibujar la ruta
-                let retries = 0;
-                const waitForCampus = () => {
-                  const active = campusData.find(c => c.id_campus === campusId);
-                  if (active && mapRef.current) {
-                    setTimeout(drawRoute, 350); // pequeño delay para asegurar que el mapa terminó el fitBounds
-                  } else if (retries < 15) {
-                    retries++;
-                    setTimeout(waitForCampus, 100);
-                  } else {
-                    // Si no carga, igual intentamos dibujar
-                    drawRoute();
-                  }
-                };
-                waitForCampus();
-              } else {
-                drawRoute();
-              }
+              // For shared links: MapContext already handles centering
+              // Just draw the route and don't call flyToCampus
+              drawRoute();
             }
           })
           .catch(err => console.error("Error loading shared route:", err));
