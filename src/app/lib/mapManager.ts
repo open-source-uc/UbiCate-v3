@@ -807,10 +807,14 @@ static drawPlaces(
         const onClick = (e: mapboxgl.MapLayerMouseEvent) => {
           const f = e.features?.[0]; if (!f) return;
           const pid = String((f.properties as any)?.placeId ?? f.id);
-          const any = groups.get(pid);
-          const hasPoly = Boolean(any?.polys?.length);
-          const cen = hasPoly ? centroidOf(any!.polys[0] as GeoJSON.Feature)! : (any?.points[0]?.geometry as GeoJSON.Point)?.coordinates as [number, number];
-          const payload = { placeId: pid, properties: { ...(any?.props ?? {}) }, geometryType: hasPoly ? "Polygon" : "Point", lngLat: e.lngLat ?? (cen ? new mapboxgl.LngLat(cen[0], cen[1]) : undefined) };
+          const any = groups?.get?.(pid);
+          if (!any) {
+            console.warn('[drawPlaces] Grupo no encontrado para placeId:', pid);
+            return;
+          }
+          const hasPoly = Boolean(any.polys?.length);
+          const cen = hasPoly ? centroidOf(any.polys[0] as GeoJSON.Feature)! : (any.points[0]?.geometry as GeoJSON.Point)?.coordinates as [number, number];
+          const payload = { placeId: pid, properties: { ...(any.props ?? {}) }, geometryType: hasPoly ? "Polygon" : "Point", lngLat: e.lngLat ?? (cen ? new mapboxgl.LngLat(cen[0], cen[1]) : undefined) };
           (map as any).__onPlaceClick?.(payload);
           if (typeof window !== "undefined") {
             window.dispatchEvent(new CustomEvent("place:open-in-sidebar", { detail: payload }));
@@ -938,10 +942,14 @@ static drawPlaces(
       const click = (e: mapboxgl.MapLayerMouseEvent) => {
         const f = e.features?.[0]; if (!f) return;
         const pid = String((f.properties as any)?.placeId ?? f.id);
-        const any = groups.get(pid);
-        const hasPoly = Boolean(any?.polys?.length);
-        const cen = hasPoly ? centroidOf(any!.polys[0] as GeoJSON.Feature)! : (any?.points[0]?.geometry as GeoJSON.Point)?.coordinates as [number, number];
-        const payload = { placeId: pid, properties: { ...(any?.props ?? {}) }, geometryType: hasPoly ? "Polygon" : "Point", lngLat: e.lngLat ?? (cen ? new mapboxgl.LngLat(cen[0], cen[1]) : undefined) };
+        const any = groups?.get?.(pid);
+        if (!any) {
+          console.warn('[drawPlaces SINGLE] Grupo no encontrado para placeId:', pid);
+          return;
+        }
+        const hasPoly = Boolean(any.polys?.length);
+        const cen = hasPoly ? centroidOf(any.polys[0] as GeoJSON.Feature)! : (any.points[0]?.geometry as GeoJSON.Point)?.coordinates as [number, number];
+        const payload = { placeId: pid, properties: { ...(any.props ?? {}) }, geometryType: hasPoly ? "Polygon" : "Point", lngLat: e.lngLat ?? (cen ? new mapboxgl.LngLat(cen[0], cen[1]) : undefined) };
         (map as any).__onPlaceClick?.(payload);
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("place:open-in-sidebar", { detail: payload }));

@@ -12,6 +12,18 @@ import type { Place } from '@/app/types/placeType';
 import type { RouteWithGeo } from '@/app/types/routeType';
 import { MAPBOX_STYLE_URL } from '@/themes/mapstyles';
 
+// Helper function to convert various GeoJSON formats to FeatureCollection
+const toFeatureCollection = (g: any): GeoJSON.FeatureCollection => {
+  if (!g) return { type: "FeatureCollection", features: [] };
+  if (typeof g === "string") {
+    try { return JSON.parse(g); } catch { return { type: "FeatureCollection", features: [] }; }
+  }
+  if (g.type === "FeatureCollection") return g;
+  if (g.type === "Feature") return { type: "FeatureCollection", features: [g] };
+  if (Array.isArray(g)) return { type: "FeatureCollection", features: g };
+  return { type: "FeatureCollection", features: [] };
+};
+
 type CampusWithGeo = Campus & {
   featureCollection?: FeatureCollection;
   geojson?: unknown;
@@ -72,13 +84,6 @@ useEffect(() => {
     }
   }
 }, [searchParams]);
-  
-  // Loading states to prevent duplicate API calls
-  const loadingStatesRef = useRef({
-    campus: false,
-    placeNames: false,
-    places: false
-  });
 
 const geolocateRef = useRef<mapboxgl.GeolocateControl | null>(null);
 
@@ -86,41 +91,57 @@ useEffect(() => {
   if (mapRef.current || !mapContainer.current) return;
 
     const mapboxApiKey = process.env.NEXT_PUBLIC_MAPBOX_API_KEY;
-
-  mapboxgl.accessToken = mapboxApiKey!;
-  const map = new mapboxgl.Map({
-    container: mapContainer.current!,
-    style: MAPBOX_STYLE_URL,
-    center: [-70.6483, -33.4569],
-    zoom: 12,
-  });
-
-  const geolocate = new mapboxgl.GeolocateControl({
-    positionOptions: { enableHighAccuracy: true },
-    trackUserLocation: true,
-    showUserHeading: true,
-  });
-
-  geolocateRef.current = geolocate; 
-  map.addControl(geolocate, 'bottom-right');
-
-  mapRef.current = map;
-
-  map.on('load', () => {
-    setLoaded(true);
-  
-  const sharedLocation = sharedLocationRef.current;
-  if (sharedLocation) {
-    setTimeout(() => {
-      createEmergencyMarker(map, sharedLocation.lat, sharedLocation.lng);
-    }, 500);
+  if (!mapboxApiKey) {
+    console.error('[MapProvider] NEXT_PUBLIC_MAPBOX_API_KEY no configurada en .env.local');
+    return () => {};
   }
-});
 
-  return () => {
-    mapRef.current?.remove();
-    mapRef.current = null;
-  };
+  mapboxgl.accessToken = mapboxApiKey;
+  try {
+    // Inicializar mapa directamente en San Joaquín
+    const SAN_JOAQUIN_CENTER: [number, number] = [-70.611, -33.498];
+    
+    const map = new mapboxgl.Map({
+      container: mapContainer.current!,
+      style: MAPBOX_STYLE_URL,
+      center: SAN_JOAQUIN_CENTER,
+      zoom: 16,
+    });
+
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      showUserHeading: true,
+    });
+
+    geolocateRef.current = geolocate; 
+    map.addControl(geolocate, 'bottom-right');
+
+    mapRef.current = map;
+
+    map.on('load', () => {
+      setLoaded(true);
+    
+      const sharedLocation = sharedLocationRef.current;
+      if (sharedLocation) {
+        setTimeout(() => {
+          createEmergencyMarker(map, sharedLocation.lat, sharedLocation.lng);
+        }, 500);
+      }
+    });
+
+    map.on('error', (e) => {
+      console.error('[MapProvider] Mapbox error:', e.error?.message || e);
+    });
+
+    return () => {
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+  } catch (err) {
+    console.error('[MapProvider] Error inicializando Mapbox:', err);
+    return () => {};
+  }
 }, []);
 
   // Expose a trigger to programmatically invoke the GeolocateControl
@@ -143,208 +164,158 @@ useEffect(() => {
 
 
   useEffect(() => {
-    // Load campus data
-    (async () => {
-      if (loadingStatesRef.current.campus) return;
-      loadingStatesRef.current.campus = true;
+    // Ejecutar todas las llamadas en paralelo en vez de secuenciales
+    let isMounted = true;
+
+    Promise.all([
+      // Cargar campus
+      fetch('/api/ubica', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : Promise.reject(`Campus: ${res.status}`))
+        .then(data => {
+          if (isMounted) {
+            console.log(`[MapProvider] Campus cargados (${data.length} registros).`);
+            setCampusData(data);
+          }
+          return data;
+        }),
       
-      try {
-        console.log('[MapProvider] Cargando datos de campus desde API...');
-        const res = await fetch('/api/ubica', { cache: 'no-store' });
-
-        if (!res.ok) {
-          throw new Error(`Error al cargar campus: ${res.status} ${res.statusText}`);
-        }
-
-        const data: CampusWithGeo[] = await res.json();
-        console.log(`[MapProvider] Datos de campus cargados (${data.length} registros).`);
-        setCampusData(data);
-      } catch (error) {
-        console.error('[MapProvider] Error cargando datos de campus:', error);
-      } finally {
-        loadingStatesRef.current.campus = false;
-      }
-    })();
-
-    // Load place types
-    (async () => {
-      if (loadingStatesRef.current.placeNames) return;
-      loadingStatesRef.current.placeNames = true;
+      // Cargar tipos de punto e inicializar iconos
+      fetch('/api/places/getTypes', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : Promise.reject(`PlaceTypes: ${res.status}`))
+        .then(async (data) => {
+          if (isMounted) {
+            console.log(`[MapProvider] Tipos de punto cargados (${data.length} registros).`);
+            setPlaceNames(data);
+            // Inicializar iconos en paralelo
+            try {
+              await MapUtils.initPlaceIcons();
+              console.log('[MapProvider] Iconos inicializados');
+            } catch (err) {
+              console.error('[MapProvider] Error inicializando iconos:', err);
+            }
+          }
+          return data;
+        }),
       
-      try {
-        console.log('[MapProvider] Cargando tipos de punto desde API...');
-        const res = await fetch('/api/places/getTypes');
+      // Cargar todos los lugares
+      fetch('/api/places/getAll', { cache: 'no-store' })
+        .then(res => res.ok ? res.json() : Promise.reject(`Places: ${res.status}`))
+        .then(data => {
+          if (isMounted) {
+            console.log(`[MapProvider] Lugares cargados (${data.length} registros).`);
+            setPlaces(data);
+          }
+          return data;
+        })
+    ]).catch(error => {
+      console.error('[MapProvider] Error cargando datos iniciales:', error);
+    });
 
-        if (!res.ok) {
-          throw new Error(`Error al cargar tipos de punto: ${res.status} ${res.statusText}`);
-        }
-
-        const data: PlaceName[] = await res.json();
-        console.log(`[MapProvider] Tipos de punto cargados (${data.length} registros).`);
-        setPlaceNames(data);
-        
-        // Also initialize route icons
-        try {
-          await MapUtils.initRouteIcons();
-          console.log('[MapProvider] Iconos de rutas inicializados');
-        } catch (error) {
-          console.error('[MapProvider] Error inicializando iconos de rutas:', error);
-        }
-      } catch (error) {
-        console.error('[MapProvider] Error cargando tipos de punto:', error);
-      } finally {
-        loadingStatesRef.current.placeNames = false;
-      }
-    })();
-
-    // Load places
-    (async () => {
-      if (loadingStatesRef.current.places) return;
-      loadingStatesRef.current.places = true;
-      
-      try {
-        console.log('[MapProvider] Cargando puntos de interés desde API...');
-        const res = await fetch('/api/places/getAll', { cache: 'no-store' });
-
-        if (!res.ok) {
-          throw new Error(`Error al cargar puntos de interés: ${res.status} ${res.statusText}`);
-        }
-
-        const data: PlaceWithGeo[] = await res.json();
-        setPlaces(data);
-      } catch (error) {
-        console.error('[MapProvider] Error cargando puntos de interés:', error);
-      } finally {
-        loadingStatesRef.current.places = false;
-      }
-    })();
-
-    // Las rutas se cargarán cuando se seleccione un campus
-    // No cargamos todas las rutas al inicio
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Función para cargar rutas de un campus específico
   const loadRoutesByCampus = useCallback(async (campusId: number) => {
     try {
       console.log(`[MapProvider] Cargando rutas del campus ${campusId}...`);
-      const res = await fetch('/api/routes/published', { cache: 'no-store' });
+      // Rutas son mutables, sin caché para siempre obtener datos frescos
+      const res = await fetch(`/api/routes/published?campusId=${campusId}`, { cache: 'no-store' });
 
       if (!res.ok) {
-        throw new Error(`Error al cargar rutas: ${res.status} ${res.statusText}`);
+        throw new Error(`Error al cargar rutas: ${res.status}`);
       }
 
-      const allRoutes: RouteWithGeo[] = await res.json();
-      
-      // Filtrar rutas por campus
-      const campusRoutes = allRoutes.filter(route => route.id_campus === campusId);
-      
-      console.log(`[MapProvider] Rutas cargadas para campus ${campusId}: ${campusRoutes.length} rutas`);
+      const campusRoutes: RouteWithGeo[] = await res.json();
+      console.log(`[MapProvider] Rutas cargadas (${campusRoutes.length})`);
       setRoutes(campusRoutes);
     } catch (error) {
-      console.error(`[MapProvider] Error cargando rutas del campus ${campusId}:`, error);
-      setRoutes([]); // Limpiar rutas en caso de error
+      console.error(`[MapProvider] Error cargando rutas:`, error);
+      setRoutes([]);
     }
   }, []);
   
-  const showPlaces = (placeTypeId: number) => {
+  const showPlaces = useCallback((placeTypeId: number) => {
     const map = mapRef.current;
-    if (!map) return;
-   const toFC = (g: any): GeoJSON.FeatureCollection =>
-  g?.type === "FeatureCollection" ? g
-  : g?.type === "Feature" ? { type: "FeatureCollection", features: [g] }
-  : Array.isArray(g) ? { type: "FeatureCollection", features: g }
-  : { type: "FeatureCollection", features: [] };
+    if (!map || !currentCampus) return;
 
-const filteredPlaces = places.filter(p =>
-  p.id_tipo_lugar === placeTypeId && p.id_campus === currentCampus?.id_campus
-);
+    const filteredPlaces = places.filter(p =>
+      p.id_tipo_lugar === placeTypeId && p.id_campus === currentCampus.id_campus
+    );
 
-const placesFC: GeoJSON.FeatureCollection[] = filteredPlaces.map((p) => {
-  const fc = toFC(p.featureCollection ?? p.geojson);
-  fc.features = fc.features.map((f) => ({
-    ...f,
-    properties: {
-      ...(f.properties ?? {}),
-      placeId: p.id_lugar,
-      placeTypeId: p.id_tipo_lugar,
-      placeName: p.nombre_lugar,
-    },
-  }));
-  return fc;
-});
-(map as any).__removeRoutes?.();
-setActiveRoute(null); // Limpiar ruta activa cuando se muestran lugares
-MapManager.drawPlaces(map, placesFC, { mode: "multi" });
+    const placesFC: GeoJSON.FeatureCollection[] = filteredPlaces.map((p) => {
+      const fc = toFeatureCollection(p.featureCollection ?? p.geojson);
+      fc.features = fc.features.map((f) => ({
+        ...f,
+        properties: {
+          ...(f.properties ?? {}),
+          placeId: p.id_lugar,
+          placeTypeId: p.id_tipo_lugar,
+          placeName: p.nombre_lugar,
+        },
+      }));
+      return fc;
+    });
 
-  }
-
-const showRoute = (routeId: number) => {
-  const map = mapRef.current; if (!map) return;
-
-  const toFC = (g: any): GeoJSON.FeatureCollection =>
-    typeof g === "string" ? JSON.parse(g) :
-    g?.type === "FeatureCollection" ? g :
-    g?.type === "Feature" ? { type: "FeatureCollection", features: [g] } :
-    Array.isArray(g) ? { type: "FeatureCollection", features: g } :
-    { type: "FeatureCollection", features: [] };
-
-  const route = routes.find(r => r.id_ruta === routeId);
-  if (!route) {
-    console.warn(`[showRoute] Ruta ${routeId} no encontrada en el campus actual`);
+    (map as any).__removeRoutes?.();
     setActiveRoute(null);
-    return;
-  }
+    MapManager.drawPlaces(map, placesFC, { mode: "multi" });
+  }, [places, currentCampus]);
 
-  // Verificar que la ruta pertenece al campus actual
-  if (currentCampus && route.id_campus !== currentCampus.id_campus) {
-    console.warn(`[showRoute] Ruta ${routeId} no pertenece al campus actual ${currentCampus.id_campus}`);
-    setActiveRoute(null);
-    return;
-  }
+  const showRoute = useCallback((routeId: number) => {
+    const map = mapRef.current;
+    if (!map || !currentCampus) return;
 
-  // Guardar la ruta activa
-  setActiveRoute(route);
+    const route = routes.find(r => r.id_ruta === routeId);
+    if (!route || route.id_campus !== currentCampus.id_campus) {
+      console.warn(`[showRoute] Ruta ${routeId} no encontrada o no pertenece al campus`);
+      setActiveRoute(null);
+      return;
+    }
 
-  // 🔵 toma SOLO las líneas del FC, SIN modificar coordenadas
-  const fc = toFC(route.featureCollection);
-  const features = (fc.features ?? [])
-    .filter(f => f?.geometry && (f.geometry.type === "LineString" || f.geometry.type === "MultiLineString"))
-    .map((f, i) => ({
-      type: "Feature",
-      id: String((f.properties as any)?.routeId ?? `${routeId}-${i}`),
-      properties: {
-        ...(f.properties ?? {}),
-        routeId: String((f.properties as any)?.routeId ?? routeId),
-        routeName: (route as any).nombre_ruta ?? `route-${routeId}`,
-        routeColor: "#0176DE",
-      },
-      geometry: f.geometry // 👈 no swap
-    })) as GeoJSON.Feature[];
+    setActiveRoute(route);
 
-  if (!features.length) return;
+    // Dibujar geometría de la ruta
+    const fc = toFeatureCollection(route.featureCollection);
+    const features = (fc.features ?? [])
+      .filter(f => f?.geometry && (f.geometry.type === "LineString" || f.geometry.type === "MultiLineString"))
+      .map((f, i) => ({
+        type: "Feature",
+        id: String((f.properties as any)?.routeId ?? `${routeId}-${i}`),
+        properties: {
+          ...(f.properties ?? {}),
+          routeId: String((f.properties as any)?.routeId ?? routeId),
+          routeName: (route as any).nombre_ruta ?? `route-${routeId}`,
+          routeColor: "#0176DE",
+        },
+        geometry: f.geometry
+      })) as GeoJSON.Feature[];
 
-  (map as any).__removeRoutes?.();
+    if (!features.length) return;
 
-  MapManager.drawRoutes(map, { type: "FeatureCollection", features }, { fit: true, showEndpoints: true });
+    (map as any).__removeRoutes?.();
+    MapManager.drawRoutes(map, { type: "FeatureCollection", features }, { fit: true, showEndpoints: true });
 
-  const filteredPlaces = places.filter(place => route?.placeIds.includes(place.id_lugar))
-
-  const placesFC: GeoJSON.FeatureCollection[] = filteredPlaces.map((p) => {
-  const fc = toFC(p.featureCollection ?? p.geojson);
-    fc.features = fc.features.map((f) => ({
-      ...f,
-      properties: {
-        ...(f.properties ?? {}),
-        placeId: p.id_lugar,
-        placeTypeId: p.id_tipo_lugar,
-        placeName: p.nombre_lugar,
-      },
-    }));
-    return fc;
-  });
-  
-  MapManager.drawPlaces(map, placesFC, { mode: "multi" });
-};
+    // Dibujar lugares asociados a la ruta
+    const filteredPlaces = places.filter(place => route.placeIds?.includes(place.id_lugar));
+    if (filteredPlaces.length > 0) {
+      const placesFC: GeoJSON.FeatureCollection[] = filteredPlaces.map((p) => {
+        const fc = toFeatureCollection(p.featureCollection ?? p.geojson);
+        fc.features = fc.features.map((f) => ({
+          ...f,
+          properties: {
+            ...(f.properties ?? {}),
+            placeId: p.id_lugar,
+            placeTypeId: p.id_tipo_lugar,
+            placeName: p.nombre_lugar,
+          },
+        }));
+        return fc;
+      });
+      MapManager.drawPlaces(map, placesFC, { mode: "multi" });
+    }
+  }, [routes, places, currentCampus]);
 
 
 
