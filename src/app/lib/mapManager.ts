@@ -402,6 +402,66 @@ static drawSharedPlace(
   })();
 }
 
+/**
+ * Draw a single shared route on the map (for shared links)
+ */
+static drawSharedRoute(
+  map: mapboxgl.Map,
+  routeData: {
+    id_ruta: number;
+    nombre_ruta: string;
+    featureCollection: any;
+    placeIds?: number[];
+  },
+  opts: { zoom?: boolean; showEndpoints?: boolean } = {}
+) {
+  (async () => {
+    try {
+      console.log('[drawSharedRoute] Drawing shared route:', routeData);
+
+      // Get features - filter to only LineString/MultiLineString
+      const toFC = (g: any): GeoJSON.FeatureCollection =>
+        !g ? { type: "FeatureCollection", features: [] }
+        : g.type === "FeatureCollection" ? g
+        : g.type === "Feature" ? { type: "FeatureCollection", features: [g] }
+        : Array.isArray(g) ? { type: "FeatureCollection", features: g }
+        : { type: "FeatureCollection", features: [] };
+
+      const fc = toFC(routeData.featureCollection);
+      const features = (fc.features ?? [])
+        .filter(f => f?.geometry && (f.geometry.type === "LineString" || f.geometry.type === "MultiLineString"))
+        .map((f, i) => ({
+          type: "Feature",
+          id: String((f.properties as any)?.routeId ?? `${routeData.id_ruta}-${i}`),
+          properties: {
+            ...(f.properties ?? {}),
+            routeId: String((f.properties as any)?.routeId ?? routeData.id_ruta),
+            routeName: routeData.nombre_ruta || `route-${routeData.id_ruta}`,
+            routeColor: "#0176DE",
+          },
+          geometry: f.geometry
+        })) as GeoJSON.Feature[];
+
+      if (!features.length) {
+        console.warn('[drawSharedRoute] No valid LineString features found');
+        return;
+      }
+
+      // Use the existing drawRoutes function
+      this.drawRoutes(map, 
+        { type: "FeatureCollection", features }, 
+        { 
+          fit: opts.zoom ?? true, 
+          showEndpoints: opts.showEndpoints ?? true 
+        }
+      );
+
+    } catch (err) {
+      console.error("[drawSharedRoute] Error:", err);
+    }
+  })();
+}
+
 static drawPlaces(
   map: mapboxgl.Map,
   data: unknown | unknown[],
@@ -484,6 +544,7 @@ static drawPlaces(
         const props: any = { ...(f.properties ?? {}) };
         const raw = props.placeId ?? (f as any).id ?? `${prefix}-${auto++}`;
         const pid = String(raw);
+        // Preservar TODAS las propiedades incluyendo placeTypeId, placeName, etc
         return { ...f, id: pid, properties: { ...props, placeId: pid } } as GeoJSON.Feature;
       });
     });
@@ -584,10 +645,14 @@ static drawPlaces(
     // ====== PUNTOS ======
     const ensureIconImage = (key: string, iconName: string, color: string) => {
       if (map.hasImage(key)) return;
+      if (typeof document === "undefined") return; // SSR guard
+      
       const SIZE = 28, P = 4; // Tamaño del ícono
       const c = document.createElement("canvas");
       c.width = c.height = SIZE + P*2;
-      const ctx = c.getContext("2d")!;
+      const ctx = c.getContext("2d");
+      if (!ctx) return;
+      
       ctx.clearRect(0,0,c.width,c.height);
       
       // Solo dibujar el ícono en su color correspondiente
@@ -620,9 +685,10 @@ static drawPlaces(
           if (g.props?.placeIcon && g.props?.placeColor) {
             return { icon: g.props.placeIcon, color: g.props.placeColor };
           }
-          // Fallback a MapUtils
-          return MapUtils.idToIcon(g.props?.placeTypeId) || { icon:"home", color:"#0176DE" }; 
-        } catch { 
+          // Fallback a MapUtils - ASEGURAR QUE ESTÁ INICIALIZADO
+          const iconSpec = MapUtils.idToIcon(g.props?.placeTypeId);
+          return iconSpec || { icon:"home", color:"#0176DE" }; 
+        } catch {
           return { icon:"home", color:"#0176DE" }; 
         }
       })();

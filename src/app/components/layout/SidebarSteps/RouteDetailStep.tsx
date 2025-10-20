@@ -12,6 +12,7 @@ import { useMap } from "../../context/MapContext";
 export default function RouteDetailStep({ data }: StepProps) {
   const [route, setRoute] = useState<RouteWithGeo | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
+  const [sharing, setSharing] = useState(false);
   const { clearQueryParams } = useSidebar();
   const { setActiveRoute, mapRef } = useMap();
 
@@ -72,6 +73,42 @@ export default function RouteDetailStep({ data }: StepProps) {
     clearQueryParams();
   }
 
+  async function handleShareRoute(e: React.MouseEvent<HTMLAnchorElement>) {
+    e.preventDefault();
+    
+    if (!route) return;
+    
+    setSharing(true);
+
+    try {
+      // Generar URL con el routeId para abrir la ruta completa
+      const shareUrl = `${window.location.origin}/?menu=RouteDetailStep&routeId=${route.id_ruta}`;
+      const message = `🗺️ ${route.nombre_ruta} - ${route.nombre_campus}\n${shareUrl}`;
+
+      // Intentar usar Web Share API
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `${route.nombre_ruta} - UC`,
+            text: message,
+            url: shareUrl
+          });
+        } catch {
+          // Usuario canceló
+        }
+      } else {
+        // Fallback: copiar al portapapeles
+        await navigator.clipboard.writeText(shareUrl);
+        alert('✅ Enlace copiado al portapapeles:\n' + shareUrl);
+      }
+    } catch (error) {
+      console.error('Error al compartir:', error);
+      alert('❌ Error al compartir ruta');
+    } finally {
+      setSharing(false);
+    }
+  }
+
   // Función para obtener el estilo del badge de estado
   const getEstadoBadgeStyle = (estadoId: number) => {
     const estilos: Record<number, { bg: string; color: string; border: string; text: string }> = {
@@ -109,6 +146,23 @@ export default function RouteDetailStep({ data }: StepProps) {
       
       {/* Título y badges */}
       <h1 style={{ fontSize: "1.5rem", marginTop: "1rem" }}>{route.nombre_ruta}</h1>
+
+      {/* Botón Compartir */}
+      <a 
+        href="#" 
+        className="uc-btn btn-secondary"
+        onClick={handleShareRoute}
+        style={{ 
+          marginTop: '10px', 
+          marginBottom: '10px',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        {sharing ? 'Compartiendo...' : 'Compartir'}
+        <i className="uc-icon">share</i>
+      </a>
       
       <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "10px" }}>
         <span style={{ fontSize: "1.1rem", fontStyle: "italic", color: "#666" }}>
