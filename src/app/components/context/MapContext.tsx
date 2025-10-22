@@ -297,7 +297,7 @@ useEffect(() => {
         .then(res => res.ok ? res.json() : Promise.reject(`Routes: ${res.status}`))
         .then(data => {
           if (isMounted) {
-            console.log(`[MapProvider] Todas las rutas cargadas (${data.length} registros).`);
+            console.log(`[MapProvider] Todas los Circuitos cargados son (${data.length} registros).`);
             // Guardar en window para poder acceder después
             (window as any).__allRoutes = data;
             setAllRoutesLoaded(true);
@@ -316,19 +316,19 @@ useEffect(() => {
   // Función para cargar rutas de un campus específico
   const loadRoutesByCampus = useCallback(async (campusId: number) => {
     try {
-      console.log(`[MapProvider] Cargando rutas del campus ${campusId}...`);
+      console.log(`[MapProvider] Cargando Cirucuitos del campus ${campusId}...`);
       // Rutas son mutables, sin caché para siempre obtener datos frescos
       const res = await fetch(`/api/routes/published?campusId=${campusId}`, { cache: 'no-store' });
 
       if (!res.ok) {
-        throw new Error(`Error al cargar rutas: ${res.status}`);
+        throw new Error(`Error al cargar circuitos: ${res.status}`);
       }
 
       const campusRoutes: RouteWithGeo[] = await res.json();
-      console.log(`[MapProvider] Rutas cargadas (${campusRoutes.length})`);
+      console.log(`[MapProvider] Circuitos cargados (${campusRoutes.length})`);
       setRoutes(campusRoutes);
     } catch (error) {
-      console.error(`[MapProvider] Error cargando rutas:`, error);
+      console.error(`[MapProvider] Error cargando circuitos:`, error);
       setRoutes([]);
     }
   }, []);
@@ -352,11 +352,11 @@ useEffect(() => {
             if (coords && mapRef.current) {
               mapRef.current.setCenter([coords[0], coords[1]]);
               mapRef.current.setZoom(17);
-              console.log(`[MapProvider] Mapa centrado en ruta compartida: ${route.nombre_ruta}`);
+              console.log(`[MapProvider] Mapa centrado en circuito compartido: ${route.nombre_ruta}`);
             }
           }
         } catch (err) {
-          console.error('[MapProvider] Error centrando en ruta compartida:', err);
+          console.error('[MapProvider] Error centrando en circuito compartido:', err);
         }
       }
     }
@@ -395,7 +395,7 @@ useEffect(() => {
 
     const route = routes.find(r => r.id_ruta === routeId);
     if (!route || route.id_campus !== currentCampus.id_campus) {
-      console.warn(`[showRoute] Ruta ${routeId} no encontrada o no pertenece al campus`);
+      console.warn(`Circuito ${routeId} no encontrado o no pertenece al campus`);
       setActiveRoute(null);
       return;
     }

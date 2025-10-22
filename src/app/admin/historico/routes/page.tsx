@@ -136,11 +136,11 @@ export default function HistoricoRutasPage() {
     });
   };
 
-  if (loading) return <AdminPageContainer title="Historial de Cambios de Rutas"><p>Cargando historial de Cambios de Rutas...</p></AdminPageContainer>;
-  if (error) return <AdminPageContainer title="Historial de Cambios de Rutas"><p style={{ color: "#EF4444" }}>Error: {error}</p></AdminPageContainer>;
+  if (loading) return <AdminPageContainer title="Historial de Cambios de Circuitos"><p>Cargando historial de Cambios de Circuitos...</p></AdminPageContainer>;
+  if (error) return <AdminPageContainer title="Historial de Cambios de Circuitos"><p style={{ color: "#EF4444" }}>Error: {error}</p></AdminPageContainer>;
 
   return (
-    <AdminPageContainer title="Historial de Cambios de Rutas">
+    <AdminPageContainer title="Historial de Cambios de Circuitos">
       <div style={{ overflowX: "auto" }}>
         {/* Filtros y búsqueda */}
         <div className="mb-24">
@@ -179,12 +179,12 @@ export default function HistoricoRutasPage() {
                 }}
               >
                 <label htmlFor="searchHistorico" className="uc-form-label">
-                  Buscar Ruta
+                  Buscar Circuito
                 </label>
                 <input
                   id="searchHistorico"
                   type="text"
-                  placeholder="Nombre de la ruta..."
+                  placeholder="Nombre del circuito..."
                   value={search}
                   onChange={e => {
                     setSearch(e.target.value);

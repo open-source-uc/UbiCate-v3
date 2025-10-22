@@ -5,12 +5,12 @@ import PublishedRoutesTab from "./PublishedRoutesTab";
 
 const ROUTE_TABS = [
   { 
-    label: "Rutas en Construcción", 
+    label: "Circuitos en Construcción", 
     value: "tab-01", 
     component: <PendingRoutesTab /> 
   },
   { 
-    label: "Rutas Publicadas", 
+    label: "Circuitos Publicados", 
     value: "tab-02", 
     component: <PublishedRoutesTab /> 
   },

@@ -44,14 +44,14 @@ export async function GET(request: NextRequest) {
       };
     });
     
-    logger.info(`Consulta de rutas publicadas completada${campusId ? ` (Campus ID: ${campusId})` : ''}: ${normalized.length} rutas`);
+    logger.info(`Consulta de circuitos publicadas completada${campusId ? ` (Campus ID: ${campusId})` : ''}: ${normalized.length} circuitos encontrados.`);
     return NextResponse.json(normalized, {
       status: 200,
       headers: { "Cache-Control": "no-store" },
     });
     
   } catch (err) {
-    logger.error("[DB] Error Rutas:", err);
+    logger.error("[DB] Error Circuitos:", err);
     return NextResponse.json({ error: "Error consultando BD" }, { status: 500 });
   }
 }

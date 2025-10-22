@@ -149,42 +149,42 @@ export default function AgregarRutaPage() {
     // Validación básica
     if (!formData.nombre_ruta.trim()) {
       setIsSuccess(false);
-      setModalMessage("Por favor, ingresa un nombre para la ruta. Este campo es obligatorio para identificar la ruta.");
+      setModalMessage("Por favor, ingresa un nombre para el circuito. Este campo es obligatorio para identificar el circuito.");
       setModalOpen(true);
       return;
     }
     
     if (formData.id_campus === 0) {
       setIsSuccess(false);
-      setModalMessage("Por favor, selecciona el campus donde se encuentra esta ruta. Es necesario para organizar las rutas por ubicación.");
+      setModalMessage("Por favor, selecciona el campus donde se encuentra este circuito. Es necesario para organizar los circuitos por ubicación.");
       setModalOpen(true);
       return;
     }
 
     if (!formData.descripcion.trim()) {
       setIsSuccess(false);
-      setModalMessage("Por favor, agrega una descripción para la ruta. Esto ayuda a los usuarios a entender qué lugares conecta.");
+      setModalMessage("Por favor, agrega una descripción para el circuito. Esto ayuda a los usuarios a entender qué lugares conecta.");
       setModalOpen(true);
       return;
     }
 
     if (!formData.icono.trim()) {
       setIsSuccess(false);
-      setModalMessage("Por favor, especifica un ícono para la ruta. Puedes consultar la lista en Google Fonts Icons.");
+      setModalMessage("Por favor, especifica un ícono para el circuito. Puedes consultar la lista en Google Fonts Icons.");
       setModalOpen(true);
       return;
     }
 
     if (!formData.color_icono.trim() || formData.color_icono === "#") {
       setIsSuccess(false);
-      setModalMessage("Por favor, selecciona un color para la ruta. Esto ayuda a identificarla visualmente en el mapa.");
+      setModalMessage("Por favor, selecciona un color para el circuito. Esto ayuda a identificarla visualmente en el mapa.");
       setModalOpen(true);
       return;
     }
 
     if (!formData.geojson.trim()) {
       setIsSuccess(false);
-      setModalMessage("Por favor, agrega el GeoJSON de la ruta. Este campo define el recorrido en el mapa.");
+      setModalMessage("Por favor, agrega el GeoJSON del circuito. Este campo define el recorrido en el mapa.");
       setModalOpen(true);
       return;
     }
@@ -221,16 +221,16 @@ export default function AgregarRutaPage() {
       if (response.ok) {
         setShowConfirmModal(false);
         setIsSuccess(true);
-        setModalMessage("¡Ruta creada con éxito!");
+        setModalMessage("¡Circuito creado con éxito!");
         setModalOpen(true);
       } else {
         setShowConfirmModal(false);
         setIsSuccess(false);
-        setModalMessage(result.message || 'Error al crear la ruta');
+        setModalMessage(result.message || 'Error al crear el circuito');
         setModalOpen(true);
       }
     } catch (error) {
-      console.error('Error al crear ruta:', error);
+      console.error('Error al crear circuito:', error);
       setShowConfirmModal(false);
       setIsSuccess(false);
       setModalMessage('Error interno del servidor');
@@ -314,7 +314,7 @@ export default function AgregarRutaPage() {
     });
 
   return (
-    <AdminPageContainer title="Agregar Nueva Ruta">
+    <AdminPageContainer title="Agregar Nuevo Circuito">
       <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
         <div className="form-container" style={{ maxWidth: 800, width: "100%" }}>
         
@@ -324,8 +324,8 @@ export default function AgregarRutaPage() {
           {/* Nombre de la ruta */}
           <div className="uc-form-group">
             <label className="uc-label-help" htmlFor="nombre_ruta">
-              Nombre de la ruta
-              <span className="uc-tooltip" data-tippy-content="Nombre descriptivo de la ruta">
+              Nombre del circuito
+              <span className="uc-tooltip" data-tippy-content="Nombre descriptivo del circuito">
                 <i className="uc-icon">info</i>
               </span>
             </label>
@@ -336,7 +336,7 @@ export default function AgregarRutaPage() {
               className="uc-input-style"
               value={formData.nombre_ruta}
               onChange={handleInputChange}
-              placeholder="Ej: Ruta hacia la Biblioteca Central"
+              placeholder="Ej: Circuito hacia la Biblioteca Central"
               required
             />
           </div>
@@ -345,7 +345,7 @@ export default function AgregarRutaPage() {
           <div className="uc-form-group">
             <label className="uc-label-help" htmlFor="id_campus">
               Campus
-              <span className="uc-tooltip" data-tippy-content="Campus al que pertenece la ruta">
+              <span className="uc-tooltip" data-tippy-content="Campus al que pertenece este circuito">
                 <i className="uc-icon">info</i>
               </span>
             </label>
@@ -370,7 +370,7 @@ export default function AgregarRutaPage() {
           <div className="uc-form-group">
             <label className="uc-label-help" htmlFor="descripcion">
               Descripción
-              <span className="uc-tooltip" data-tippy-content="Descripción detallada de la ruta (soporta Markdown)">
+              <span className="uc-tooltip" data-tippy-content="Descripción detallada del circuito (soporta Markdown)">
                 <i className="uc-icon">info</i>
               </span>
             </label>
@@ -381,7 +381,7 @@ export default function AgregarRutaPage() {
               rows={6}
               value={formData.descripcion}
               onChange={handleInputChange}
-              placeholder="Describe la ruta... (puedes usar Markdown)"
+              placeholder="Describe el circuito... (puedes usar Markdown)"
             />
             {formData.descripcion && (
               <div style={{ marginTop: "0.5rem" }}>
@@ -409,7 +409,7 @@ export default function AgregarRutaPage() {
           <div className="uc-form-group">
             <label className="uc-label-help" htmlFor="icono">
               Ícono
-              <span className="uc-tooltip" data-tippy-content="Nombre del ícono de Google Fonts Icons que representará esta ruta">
+              <span className="uc-tooltip" data-tippy-content="Nombre del ícono de Google Fonts Icons que representará este circuito">
                 <i className="uc-icon">info</i>
               </span>
             </label>
@@ -436,8 +436,8 @@ export default function AgregarRutaPage() {
           {/* Color del ícono */}
           <div className="uc-form-group">
             <label className="uc-label-help" htmlFor="color_icono">
-              Color de la ruta  
-              <span className="uc-tooltip" data-tippy-content="Color hexadecimal que se usará para el ícono y la línea de la ruta en el mapa">
+              Color del circuito
+              <span className="uc-tooltip" data-tippy-content="Color hexadecimal que se usará para el ícono y la línea del circuito en el mapa">
                 <i className="uc-icon">info</i>
               </span>
             </label>
@@ -463,15 +463,15 @@ export default function AgregarRutaPage() {
               />
             </div>
             <div style={{ marginTop: "0.5rem", fontSize: "0.9rem", color: "#666" }}>
-              Este color se aplicará tanto al ícono como a la línea de la ruta en el mapa.
+              Este color se aplicará tanto al ícono como a la línea del circuito en el mapa.
             </div>
           </div>
 
-          {/* GeoJSON de la ruta */}
+          {/* GeoJSON del circuito */}
           <div className="uc-form-group">
             <label className="uc-label-help" htmlFor="geojson">
-              GeoJSON de la ruta
-              <span className="uc-tooltip" data-tippy-content="Coordenadas geográficas que definen el recorrido de la ruta en formato GeoJSON">
+              GeoJSON del circuito
+              <span className="uc-tooltip" data-tippy-content="Coordenadas geográficas que definen el recorrido del circuito en formato GeoJSON">
                 <i className="uc-icon">info</i>
               </span>
             </label>
@@ -502,8 +502,8 @@ export default function AgregarRutaPage() {
           {formData.id_campus > 0 && (
             <div className="uc-form-group">
               <label className="uc-label-help">
-                Lugares en la ruta
-                <span className="uc-tooltip" data-tippy-content="Selecciona los lugares que forman parte de esta ruta">
+                Lugares en el campus seleccionado
+                <span className="uc-tooltip" data-tippy-content="Selecciona los lugares que forman parte de este circuito">
                   <i className="uc-icon">info</i>
                 </span>
               </label>
@@ -588,6 +588,8 @@ export default function AgregarRutaPage() {
                     onClick={() => handlePlaceToggle(place.id_lugar)}
                     >
                       <input
+                        placeholder=""
+                        title="Seleccionar lugar"
                         type="checkbox"
                         checked={selectedPlaces.includes(place.id_lugar)}
                         onChange={() => {}} // Evento manejado por el div padre
@@ -691,10 +693,10 @@ export default function AgregarRutaPage() {
             <i className="uc-icon" style={{ fontSize: "16px" }}>info</i>
             <span>
               {!formData.geojson ? 
-                "Agregue un GeoJSON para ver la ruta en el mapa" : 
+                "Agregue un GeoJSON para ver el circuito en el mapa" : 
                 selectedPlaces.length > 0 ? 
-                  `Mostrando ruta con ${selectedPlaces.length} lugar${selectedPlaces.length !== 1 ? 'es' : ''}` :
-                  "Mostrando solo la ruta - seleccione lugares para verlos en el mapa"
+                  `Mostrando circuito con ${selectedPlaces.length} lugar${selectedPlaces.length !== 1 ? 'es' : ''}` :
+                  "Mostrando solo el circuito - seleccione lugares para verlos en el mapa"
               }
             </span>
           </div>
@@ -702,7 +704,7 @@ export default function AgregarRutaPage() {
           {/* Botones */}
           <div style={{ display: "flex", gap: "1rem", marginTop: "2rem" }}>
             <button type="submit" className="uc-btn btn-featured" disabled={submitting}>
-              {submitting ? "Creando..." : "Crear Ruta"}
+              {submitting ? "Creando..." : "Crear Circuito"}
             </button>
             <button
               type="button"
@@ -734,11 +736,11 @@ export default function AgregarRutaPage() {
                   <i className="uc-icon warning-icon">help</i> Confirmar creación
                 </h2>
                 <p className="no-margin">
-                  ¿Estás seguro de que deseas crear la ruta <strong>{formData.nombre_ruta}</strong>?
+                  ¿Estás seguro de que deseas crear el circuito <strong>{formData.nombre_ruta}</strong>?
                 </p>
                 {selectedPlaces.length > 0 && (
                   <p style={{ marginTop: "12px", fontSize: "0.9rem", color: "#666" }}>
-                    La ruta incluirá {selectedPlaces.length} lugar{selectedPlaces.length !== 1 ? 'es' : ''}.
+                    El circuito incluirá {selectedPlaces.length} lugar{selectedPlaces.length !== 1 ? 'es' : ''}.
                   </p>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', flexWrap: 'wrap', marginTop: 24 }}>
@@ -748,7 +750,7 @@ export default function AgregarRutaPage() {
                     style={{ backgroundColor: '#00AA00', color: 'white' }}
                     onClick={(e) => { e.preventDefault(); if (!submitting) confirmSave(); }}
                   >
-                    Sí, crear ruta
+                    Sí, crear circuito
                   </a>
                   <button 
                     className="uc-btn btn-secondary text-center" 
@@ -783,7 +785,7 @@ export default function AgregarRutaPage() {
                 </a>
                 <div className="uc-message_body">
                   <h2 className="mb-24">
-                    <i className="uc-icon warning-icon">check_circle</i> Ruta creada con éxito
+                    <i className="uc-icon warning-icon">check_circle</i> Circuito creado con éxito
                   </h2>
                   <p className="no-margin">{modalMessage}</p>
                 </div>

@@ -40,7 +40,7 @@ export default function PlacesStep() {
         ))}
       </SideSection>
 
-      <SideSection title="Rutas" icon="map">
+      <SideSection title="Circuitos" icon="map">
         {routes.map((route) => (
           <SideOption
             key={`opción-ruta-${route.id_ruta}`}

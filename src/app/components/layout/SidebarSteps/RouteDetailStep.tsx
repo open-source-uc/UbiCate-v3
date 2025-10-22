@@ -103,7 +103,7 @@ export default function RouteDetailStep({ data }: StepProps) {
       }
     } catch (error) {
       console.error('Error al compartir:', error);
-      alert('❌ Error al compartir ruta');
+      alert('❌ Error al compartir circuito');
     } finally {
       setSharing(false);
     }
@@ -195,7 +195,7 @@ export default function RouteDetailStep({ data }: StepProps) {
             <strong>ID:</strong> {route.id_ruta}
           </div>
           <div>
-            <strong>Lugares en ruta:</strong>{" "}
+            <strong>Lugares en circuito:</strong>{" "}
             <span style={{ 
               backgroundColor: "#e8f4fd", 
               color: "#0176DE", 
@@ -265,7 +265,7 @@ export default function RouteDetailStep({ data }: StepProps) {
         <div style={{ marginTop: "1.5rem" }}>
           <h3 style={{ color: "#0176DE", fontSize: "1.1rem", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "6px" }}>
             <i className="uc-icon" style={{ fontSize: "20px" }}>place</i>
-            Lugares en la Ruta ({places.length})
+            Lugares en el circuito ({places.length})
           </h3>
           <div style={{ 
             display: "flex", 

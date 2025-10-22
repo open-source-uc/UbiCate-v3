@@ -57,11 +57,11 @@ export default function EditarRutaPage() {
       if (!routeResponse.ok) {
         if (routeResponse.status === 404) {
           setIsSuccess(false);
-          setModalMessage("Ruta no encontrada");
+          setModalMessage("Circuito no encontrado");
           setModalOpen(true);
         } else {
           setIsSuccess(false);
-          setModalMessage("Error al cargar la ruta");
+          setModalMessage("Error al cargar el circuito");
           setModalOpen(true);
         }
         setLoading(false);
@@ -93,7 +93,7 @@ export default function EditarRutaPage() {
     } catch (error) {
       console.error("Error al cargar datos:", error);
       setIsSuccess(false);
-      setModalMessage("No se pudieron cargar los datos de la ruta. Por favor, verifica tu conexión e inténtalo de nuevo.");
+      setModalMessage("No se pudieron cargar los datos del circuito. Por favor, verifica tu conexión e inténtalo de nuevo.");
       setModalOpen(true);
     } finally {
       setLoading(false);
@@ -651,6 +651,7 @@ export default function EditarRutaPage() {
                     onClick={() => handlePlaceToggle(place.id_lugar)}
                     >
                       <input
+                        title="Seleccionar lugar"
                         type="checkbox"
                         checked={selectedPlaces.includes(place.id_lugar)}
                         onChange={() => {}} // Evento manejado por el div padre
