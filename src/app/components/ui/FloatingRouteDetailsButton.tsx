@@ -31,10 +31,10 @@ export default function FloatingRouteDetailsButton() {
       href="#"
       onClick={handleClick}
       className="uc-btn btn-secondary floating-route-details-btn"
-      title="Ver detalles de la ruta"
-      aria-label="Ver detalles de la ruta"
+      title="Ver detalles del circuito"
+      aria-label="Ver detalles del circuito"
     >
-      Ver Detalles de la Ruta
+      Ver Detalles del Circuito
       <i className="uc-icon" style={{ marginLeft: '8px' }}>visibility</i>
       
       <style jsx>{`

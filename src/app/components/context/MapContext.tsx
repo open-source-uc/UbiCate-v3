@@ -352,6 +352,7 @@ useEffect(() => {
             if (coords && mapRef.current) {
               mapRef.current.setCenter([coords[0], coords[1]]);
               mapRef.current.setZoom(16);
+              setActiveRoute(route); // <-- Setear la ruta activa para mostrar el botón flotante
               console.log(`[MapProvider] Mapa centrado en circuito compartido: ${route.nombre_ruta}`);
             }
           }
