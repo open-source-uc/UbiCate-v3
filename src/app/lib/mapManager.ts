@@ -551,10 +551,11 @@ static drawPlaces(
 
     // group por placeId
     type Group = { pid: string; props: any; polys: GeoJSON.Feature[]; points: GeoJSON.Feature[] };
-    const groups = new Map<string, Group>();
+    const groups = new Map<string, Group>(); // Siempre inicializar como Map
     for (const f of rawFeatures) {
       const pid = String((f.properties as any)?.placeId ?? f.id);
-      const g = groups.get(pid) ?? { pid, props: { ...(f.properties as any) }, polys: [], points: [] };
+      // Fix defensivo: asegurar que groups es un Map y tiene .get
+      const g = (typeof groups?.get === 'function' ? groups.get(pid) : undefined) ?? { pid, props: { ...(f.properties as any) }, polys: [], points: [] };
       g.props = { ...g.props, ...(f.properties as any) };
       if (f.geometry?.type === "Point") g.points.push(f);
       else if (f.geometry?.type === "Polygon" || f.geometry?.type === "MultiPolygon") g.polys.push(f);

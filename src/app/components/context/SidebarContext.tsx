@@ -4,6 +4,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect } from
 import { useRouter, usePathname } from "next/navigation";
 import { useMap } from "./MapContext";
 import { MapManager } from "@/app/lib/mapManager";
+import LoadingModal from "../ui/LoadingModal";
 
 interface SidebarContextProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ const SidebarContext = createContext<SidebarContextProps | undefined>(undefined)
 export const SidebarProvider = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [step, setStep] = useState("MainStep");
+  const [loadingShared, setLoadingShared] = useState(false);
   const { flyToCampus, campusData, mapRef } = useMap();
 
   const router = useRouter();
@@ -76,7 +78,7 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
 
     // Handle placeId parameter (from shared links with menu=PlaceDetailStep)
     if (placeId && !isNaN(Number(placeId)) && menu === "PlaceDetailStep") {
-      // Esperar a que campusData esté cargado
+      setLoadingShared(true);
       let campusRetries = 0;
       const waitForCampusData = () => {
         if (campusData.length === 0 && campusRetries < 30) {
@@ -84,7 +86,6 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
           setTimeout(waitForCampusData, 100);
           return;
         }
-        // Fetch place data y abrir en sidebar
         fetch(`/api/places/${placeId}`)
           .then(res => {
             if (!res.ok) {
@@ -96,33 +97,32 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
             if (place && place.id_lugar && mapRef.current) {
               const map = mapRef.current;
               const drawPlace = () => {
-                // Draw the place on the map using the dedicated shared place function
                 if (place.featureCollection) {
                   MapManager.drawSharedPlace(map, {
                     id_lugar: place.id_lugar,
                     nombre_lugar: place.nombre_lugar,
                     id_tipo_lugar: place.id_tipo_lugar,
                     featureCollection: place.featureCollection
-                  }, { zoom: false }); // Let MapContext handle positioning
+                  }, { zoom: false });
                 }
-                // Dispatch event to prepare place data for sidebar
                 const payload = {
                   placeId: String(place.id_lugar),
                   properties: { ...place },
                   geometryType: place.nombre_tipo_geojson || "Point",
                 };
                 window.dispatchEvent(new CustomEvent("place:open-in-sidebar", { detail: payload }));
-                // Si es móvil, forzar el cierre del sidebar para que nunca se abra automáticamente
                 if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(max-width: 768px)").matches) {
                   window.dispatchEvent(new Event("sidebar:close"));
                 }
               };
-              // For shared links: MapContext already handles centering
-              // Just draw the place and don't call flyToCampus
               drawPlace();
             }
+            setLoadingShared(false);
           })
-          .catch(err => console.error("Error loading shared place:", err));
+          .catch(err => {
+            setLoadingShared(false);
+            console.error("Error loading shared place:", err);
+          });
       };
       waitForCampusData();
       return;
@@ -134,7 +134,7 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
     // Handle routeId parameter (from shared links with menu=RouteDetailStep)
     const routeId = params.get("routeId");
     if (routeId && !isNaN(Number(routeId)) && menu === "RouteDetailStep") {
-      // Esperar a que campusData esté cargado
+      setLoadingShared(true);
       let campusRetries = 0;
       const waitForCampusData = () => {
         if (campusData.length === 0 && campusRetries < 30) {
@@ -142,7 +142,6 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
           setTimeout(waitForCampusData, 100);
           return;
         }
-        // Fetch route data y abrir en sidebar
         fetch(`/api/routes/${routeId}`)
           .then(res => {
             if (!res.ok) {
@@ -154,21 +153,16 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
             if (route && route.id_ruta && mapRef.current) {
               const map = mapRef.current;
               const drawRoute = () => {
-                // Draw the route on the map using the dedicated shared route function
                 if (route.featureCollection) {
                   MapManager.drawSharedRoute(map, {
                     id_ruta: route.id_ruta,
                     nombre_ruta: route.nombre_ruta,
                     featureCollection: route.featureCollection,
                     placeIds: route.placeIds
-                  }, { zoom: false, showEndpoints: true }); // Let MapContext handle positioning
+                  }, { zoom: false, showEndpoints: true });
                 }
-                
-                // Esperar a que el mapa esté listo después de dibujar la ruta
                 setTimeout(() => {
-                  // Cargar y dibujar los lugares asociados a la ruta
                   if (route.placeIds && route.placeIds.length > 0) {
-                    // IMPORTANTE: Asegurar que MapUtils esté inicializado con los tipos de lugar
                     import("@/utils/MapUtils").then(({ default: MapUtils }) => {
                       MapUtils.initPlaceIcons().then(() => {
                         fetch("/api/places/getAll")
@@ -177,7 +171,6 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
                             const routePlaces = placesData.filter((place: any) => 
                               route.placeIds.includes(place.id_lugar)
                             );
-                            
                             if (routePlaces.length > 0) {
                               const toFC = (g: any): any =>
                                 !g ? { type: "FeatureCollection", features: [] }
@@ -185,8 +178,6 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
                                 : g.type === "Feature" ? { type: "FeatureCollection", features: [g] }
                                 : Array.isArray(g) ? { type: "FeatureCollection", features: g }
                                 : { type: "FeatureCollection", features: [] };
-
-                              // Copiar exactamente como en MapContext.tsx showRoute()
                               const placesFC: any[] = routePlaces.map((p: any) => {
                                 const fc = toFC(p.featureCollection ?? p.geojson);
                                 fc.features = fc.features.map((f: any) => ({
@@ -200,7 +191,6 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
                                 }));
                                 return fc;
                               });
-                              
                               MapManager.drawPlaces(map, placesFC, { mode: "multi" });
                             }
                           })
@@ -208,25 +198,24 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
                       }).catch(err => console.error("Error initializing place icons:", err));
                     });
                   }
-                }, 500); // Wait 500ms for route drawing to complete
-                
-                // Dispatch event to prepare route data for sidebar
+                }, 500);
                 const payload = {
                   routeId: String(route.id_ruta),
                   properties: { ...route },
                 };
                 window.dispatchEvent(new CustomEvent("route:open-in-sidebar", { detail: payload }));
-                // Si es móvil, forzar el cierre del sidebar para que nunca se abra automáticamente
                 if (typeof window !== "undefined" && window.matchMedia && window.matchMedia("(max-width: 768px)").matches) {
                   window.dispatchEvent(new Event("sidebar:close"));
                 }
               };
-              // For shared links: MapContext already handles centering
-              // Just draw the route and don't call flyToCampus
               drawRoute();
             }
+            setLoadingShared(false);
           })
-          .catch(err => console.error("Error loading shared route:", err));
+          .catch(err => {
+            setLoadingShared(false);
+            console.error("Error loading shared route:", err);
+          });
       };
       waitForCampusData();
       return;
@@ -243,6 +232,7 @@ export const SidebarProvider = ({ children }: { children: ReactNode }) => {
     <SidebarContext.Provider
       value={{ isOpen, toggleSidebar, openSidebar, closeSidebar, setQueryParam, step, clearQueryParams }}
     >
+      <LoadingModal open={loadingShared} text="Cargando recurso compartido..." />
       {children}
     </SidebarContext.Provider>
   );

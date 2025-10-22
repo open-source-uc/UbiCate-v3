@@ -278,7 +278,7 @@ useEffect(() => {
                       initialMapCenterRef.current = { center: [coords[0], coords[1]], zoom: 18 };
                       if (mapRef.current) {
                         mapRef.current.setCenter([coords[0], coords[1]]);
-                        mapRef.current.setZoom(18);
+                        mapRef.current.setZoom(16);
                       }
                       console.log(`[MapProvider] Mapa centrado en lugar compartido: ${place.nombre_lugar}`);
                     }
@@ -351,7 +351,7 @@ useEffect(() => {
             
             if (coords && mapRef.current) {
               mapRef.current.setCenter([coords[0], coords[1]]);
-              mapRef.current.setZoom(17);
+              mapRef.current.setZoom(16);
               console.log(`[MapProvider] Mapa centrado en circuito compartido: ${route.nombre_ruta}`);
             }
           }
