@@ -72,7 +72,8 @@ export default function HelpModal(){
         
         
       >
-        <i aria-expanded={open}
+        <i 
+        
         aria-controls="modalHelp"
         style={{    
           right: 24,

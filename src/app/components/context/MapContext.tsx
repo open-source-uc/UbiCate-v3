@@ -475,7 +475,19 @@ useEffect(() => {
 
       // Limpiar rutas anteriores del mapa
       (map as any).__removeRoutes?.();
-      setActiveRoute(null); // Limpiar ruta activa al cambiar de campus
+      // Solo limpiar ruta activa si NO es un link compartido
+      let shouldClearActiveRoute = true;
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const routeId = params.get('routeId');
+        const menu = params.get('menu');
+        if (routeId && !isNaN(Number(routeId)) && menu === 'RouteDetailStep') {
+          shouldClearActiveRoute = false;
+        }
+      }
+      if (shouldClearActiveRoute) {
+        setActiveRoute(null); // Limpiar ruta activa al cambiar de campus
+      }
       (map as any).__removePlacesPolygons?.();
 
       const dataFC: unknown =
