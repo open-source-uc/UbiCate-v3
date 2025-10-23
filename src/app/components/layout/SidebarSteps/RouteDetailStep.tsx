@@ -138,12 +138,6 @@ export default function RouteDetailStep({ data }: StepProps) {
 
   return (
     <ul {...StepTagAttributes}>
-      <button className="uc-btn btn-featured" onClick={handleStepBack}>
-        Volver
-        <i className="uc-icon">arrow_back_ios_new</i>
-      </button>
-      <br />
-      
       {/* Título y badges */}
       <h1 style={{ fontSize: "1.5rem", marginTop: "1rem" }}>{route.nombre_ruta}</h1>
 
@@ -311,6 +305,12 @@ export default function RouteDetailStep({ data }: StepProps) {
           </div>
         </div>
       )}
+      <br />
+            <button className="uc-btn btn-featured" onClick={handleStepBack}>
+        Volver
+        <i className="uc-icon">arrow_back_ios_new</i>
+      </button>
+      <br />
 
       {/* Mensaje si no hay lugares */}
       {places.length === 0 && route.placeIds && route.placeIds.length === 0 && (

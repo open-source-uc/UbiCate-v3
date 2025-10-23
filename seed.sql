@@ -3129,9 +3129,9 @@ INSERT INTO lugar
 -- Rutas
 -- =====================
 INSERT INTO ruta (id_ruta, nombre_ruta, fk_id_ubicacion_geografica, fk_id_campus, icono, color_icono) VALUES
-(1, 'Circuito de la cultura y el patrimonio', 7, 1, 'theater_comedy', '#ffaa00'),
-(2, 'Circuito de la biodiversidad', 8, 1, 'hiking', '#21ff06'),
-(3, 'Circuito del bienestar', 9, 1, 'self_improvement', '#20ffff');
+(1, 'Cultura y el Patrimonio', 7, 1, 'theater_comedy', '#ffaa00'),
+(2, 'Biodiversidad', 8, 1, 'hiking', '#21ff06'),
+(3, 'Bienestar', 9, 1, 'self_improvement', '#20ffff');
 
 -- =====================
 -- lugar_ruta
