@@ -335,33 +335,36 @@ useEffect(() => {
 
   // Detectar y centrar en ruta compartida (ejecutar cuando las rutas estén cargadas)
   useEffect(() => {
-    const sharedRouteId = (window as any).__sharedRouteId;
-    if (sharedRouteId && mapRef.current && allRoutesLoaded) {
-      const allRoutes = (window as any).__allRoutes || [];
-      const route = allRoutes.find((r: any) => String(r.id_ruta) === String(sharedRouteId));
-      
-      if (route && route.featureCollection) {
-        try {
-          const fc = toFeatureCollection(route.featureCollection);
-          const firstFeature = fc.features?.[0];
-          if (firstFeature?.geometry) {
-            const coords = firstFeature.geometry.type === 'LineString' || firstFeature.geometry.type === 'MultiLineString'
-              ? getCentroid((firstFeature.geometry as any))
-              : null;
-            
-            if (coords && mapRef.current) {
-              mapRef.current.setCenter([coords[0], coords[1]]);
-              mapRef.current.setZoom(16);
-              setActiveRoute(route); // <-- Setear la ruta activa para mostrar el botón flotante
-              console.log(`[MapProvider] Mapa centrado en circuito compartido: ${route.nombre_ruta}`);
+    // Este efecto SIEMPRE setea la ruta activa si hay link compartido, después de cualquier limpieza
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const sharedRouteId = params.get('routeId');
+      const menu = params.get('menu');
+      if (sharedRouteId && !isNaN(Number(sharedRouteId)) && menu === 'RouteDetailStep' && mapRef.current && allRoutesLoaded) {
+        const allRoutes = (window as any).__allRoutes || [];
+        const route = allRoutes.find((r: any) => String(r.id_ruta) === String(sharedRouteId));
+        if (route && route.featureCollection) {
+          try {
+            const fc = toFeatureCollection(route.featureCollection);
+            const firstFeature = fc.features?.[0];
+            if (firstFeature?.geometry) {
+              const coords = firstFeature.geometry.type === 'LineString' || firstFeature.geometry.type === 'MultiLineString'
+                ? getCentroid((firstFeature.geometry as any))
+                : null;
+              if (coords && mapRef.current) {
+                mapRef.current.setCenter([coords[0], coords[1]]);
+                mapRef.current.setZoom(16);
+              }
             }
+            setActiveRoute(route); // <-- Setear la ruta activa para mostrar el botón flotante SIEMPRE
+            console.log(`[MapProvider] Mapa centrado en circuito compartido: ${route.nombre_ruta}`);
+          } catch (err) {
+            console.error('[MapProvider] Error centrando en circuito compartido:', err);
           }
-        } catch (err) {
-          console.error('[MapProvider] Error centrando en circuito compartido:', err);
         }
       }
     }
-  }, [allRoutesLoaded]);
+  }, [allRoutesLoaded, mapRef]);
   
   const showPlaces = useCallback((placeTypeId: number) => {
     const map = mapRef.current;
@@ -481,10 +484,12 @@ useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const routeId = params.get('routeId');
         const menu = params.get('menu');
+        // Si hay un link compartido de ruta, nunca limpiar activeRoute
         if (routeId && !isNaN(Number(routeId)) && menu === 'RouteDetailStep') {
           shouldClearActiveRoute = false;
         }
       }
+      // Solo limpiar si NO hay link compartido de ruta
       if (shouldClearActiveRoute) {
         setActiveRoute(null); // Limpiar ruta activa al cambiar de campus
       }
@@ -515,24 +520,11 @@ useEffect(() => {
   );
 
   useEffect(() => {
-    if (loaded && campusData.length > 0) {
-      // Evitar flyToCampus(1) si la URL contiene un link compartido (placeId o routeId)
-      if (typeof window !== 'undefined') {
-        const params = new URLSearchParams(window.location.search);
-        const placeId = params.get('placeId');
-        const routeId = params.get('routeId');
-        const menu = params.get('menu');
-        
-        // Si hay un link compartido de lugar o ruta, no hacer flyToCampus(1)
-        if ((placeId && !isNaN(Number(placeId)) && menu === 'PlaceDetailStep') || 
-            (routeId && !isNaN(Number(routeId)) && menu === 'RouteDetailStep')) {
-          console.log('[MapProvider] Link compartido detectado, evitando fly to automático.');
-          return;
-        }
-      }
-      console.log('[MapProvider] Mapa y datos listos. Volando al campus inicial (ID=1).');
-      flyToCampus(1);
-    }
+    // Eliminado el flyToCampus(1) del load inicial para no interferir con links compartidos
+    // Si quieres restaurar el comportamiento, descomenta las líneas siguientes:
+    // if (loaded && campusData.length > 0) {
+    //   flyToCampus(1);
+    // }
   }, [loaded, campusData, flyToCampus]);
 
   return (
