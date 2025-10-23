@@ -3193,7 +3193,7 @@ INSERT INTO piso_lugar (id_piso_lugar, numero_piso, fk_id_lugar) VALUES
 -- Usuarios
 -- =====================
 INSERT INTO usuario (id_usuario, rut, dv, email, uid, nombres, apellidos) VALUES
-(1,'19903845','1','juanito.perez@uc.cl','juanito.perez','Juanito','Perez') --Ejemplo
+(1,'19903845','1','juanito.perez@uc.cl','juanito.perez','Juanito','Perez'); --Ejemplo
 
 
 -- =====================
