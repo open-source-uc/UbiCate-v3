@@ -21,7 +21,7 @@ export default function RouteDetailStep({ data }: StepProps) {
     const rid = String(data.routeId);
     setRoute(null);
     setPlaces([]);
-    
+
     fetch(`/api/routes/${rid}`)
       .then(res => {
         if (!res.ok) throw new Error('No se pudo cargar la ruta');
@@ -35,7 +35,7 @@ export default function RouteDetailStep({ data }: StepProps) {
           fetch("/api/places/getAll")
             .then(placesRes => placesRes.json())
             .then(placesData => {
-              const routePlaces = placesData.filter((place: Place) => 
+              const routePlaces = placesData.filter((place: Place) =>
                 foundRoute.placeIds.includes(place.id_lugar)
               );
               setPlaces(routePlaces);
@@ -67,7 +67,7 @@ export default function RouteDetailStep({ data }: StepProps) {
         (map as any).__removePlacesPolygons();
       }
     }
-    
+
     data?.__removeRoute?.();
     setActiveRoute(null); // Limpiar la ruta activa y ocultar el botón flotante
     clearQueryParams();
@@ -75,9 +75,9 @@ export default function RouteDetailStep({ data }: StepProps) {
 
   async function handleShareRoute(e: React.MouseEvent<HTMLAnchorElement>) {
     e.preventDefault();
-    
+
     if (!route) return;
-    
+
     setSharing(true);
 
     try {
@@ -142,12 +142,12 @@ export default function RouteDetailStep({ data }: StepProps) {
       <h1 style={{ fontSize: "1.5rem", marginTop: "1rem" }}>{route.nombre_ruta}</h1>
 
       {/* Botón Compartir */}
-      <a 
-        href="#" 
+      <a
+        href="#"
         className="uc-btn btn-secondary"
         onClick={handleShareRoute}
-        style={{ 
-          marginTop: '10px', 
+        style={{
+          marginTop: '10px',
           marginBottom: '10px',
           display: 'inline-flex',
           alignItems: 'center',
@@ -157,13 +157,13 @@ export default function RouteDetailStep({ data }: StepProps) {
         {sharing ? 'Compartiendo...' : 'Compartir'}
         <i className="uc-icon">share</i>
       </a>
-      
+
       <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "10px" }}>
         <span style={{ fontSize: "1.1rem", fontStyle: "italic", color: "#666" }}>
           Campus {route.nombre_campus}
         </span>
-        
-        <span style={{
+
+        {/* <span style={{
           backgroundColor: estadoStyle.bg,
           color: estadoStyle.color,
           padding: "4px 12px",
@@ -175,11 +175,11 @@ export default function RouteDetailStep({ data }: StepProps) {
           width: "fit-content"
         }}>
           {estadoStyle.text}
-        </span>
+        </span> */}
       </div>
 
       {/* Información básica */}
-      <div style={{ marginTop: "1.5rem" }}>
+      {/* <div style={{ marginTop: "1.5rem" }}>
         <h3 style={{ color: "#0176DE", fontSize: "1.1rem", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "6px" }}>
           <i className="uc-icon" style={{ fontSize: "20px" }}>info</i>
           Información General
@@ -190,11 +190,11 @@ export default function RouteDetailStep({ data }: StepProps) {
           </div>
           <div>
             <strong>Lugares en circuito:</strong>{" "}
-            <span style={{ 
-              backgroundColor: "#e8f4fd", 
-              color: "#0176DE", 
-              padding: "2px 10px", 
-              borderRadius: "12px", 
+            <span style={{
+              backgroundColor: "#e8f4fd",
+              color: "#0176DE",
+              padding: "2px 10px",
+              borderRadius: "12px",
               fontSize: "0.875rem",
               fontWeight: "500"
             }}>
@@ -206,9 +206,9 @@ export default function RouteDetailStep({ data }: StepProps) {
               <strong>Apariencia:</strong>{" "}
               <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <i className="uc-icon" style={{ 
-                    color: route.color_icono || "#0176DE", 
-                    fontSize: "20px" 
+                  <i className="uc-icon" style={{
+                    color: route.color_icono || "#0176DE",
+                    fontSize: "20px"
                   }}>
                     {route.icono || "route"}
                   </i>
@@ -232,7 +232,7 @@ export default function RouteDetailStep({ data }: StepProps) {
             </div>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Descripción */}
       {route.descripcion && (
@@ -241,10 +241,10 @@ export default function RouteDetailStep({ data }: StepProps) {
             <i className="uc-icon" style={{ fontSize: "20px" }}>description</i>
             Descripción
           </h3>
-          <div 
-            style={{ 
-              backgroundColor: "#f8f9fa", 
-              padding: "12px", 
+          <div
+            style={{
+              backgroundColor: "#f8f9fa",
+              padding: "12px",
               borderRadius: "8px",
               border: "1px solid #e9ecef",
               fontSize: "0.95rem"
@@ -261,9 +261,9 @@ export default function RouteDetailStep({ data }: StepProps) {
             <i className="uc-icon" style={{ fontSize: "20px" }}>place</i>
             Lugares en el circuito ({places.length})
           </h3>
-          <div style={{ 
-            display: "flex", 
-            flexDirection: "column", 
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
             gap: "8px",
             backgroundColor: "#f8f9fa",
             padding: "12px",
@@ -271,7 +271,7 @@ export default function RouteDetailStep({ data }: StepProps) {
             border: "1px solid #e9ecef"
           }}>
             {places.map((place) => (
-              <div 
+              <div
                 key={place.id_lugar}
                 style={{
                   display: "flex",
@@ -284,8 +284,8 @@ export default function RouteDetailStep({ data }: StepProps) {
                 }}
               >
                 {place.icono && (
-                  <i className="uc-icon" style={{ 
-                    color: place.color_icono || "#0176DE", 
+                  <i className="uc-icon" style={{
+                    color: place.color_icono || "#0176DE",
                     fontSize: "20px",
                     flexShrink: 0
                   }}>
@@ -306,7 +306,7 @@ export default function RouteDetailStep({ data }: StepProps) {
         </div>
       )}
       <br />
-            <button className="uc-btn btn-featured" onClick={handleStepBack}>
+      <button className="uc-btn btn-featured" onClick={handleStepBack}>
         Volver
         <i className="uc-icon">arrow_back_ios_new</i>
       </button>
@@ -314,10 +314,10 @@ export default function RouteDetailStep({ data }: StepProps) {
 
       {/* Mensaje si no hay lugares */}
       {places.length === 0 && route.placeIds && route.placeIds.length === 0 && (
-        <div style={{ 
+        <div style={{
           marginTop: "1.5rem",
-          textAlign: "center", 
-          padding: "24px", 
+          textAlign: "center",
+          padding: "24px",
           color: "#6B7280",
           background: "#F9FAFB",
           borderRadius: "8px",
