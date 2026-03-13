@@ -16,13 +16,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: process.env.NEXT_PUBLIC_APP_TITLE,
-  description: "Aplicación de mapas web que permite localizarse dentro de los campus de la UC.",
   icons: {
     icon: [
       { url: '/logo-uc-02.svg', type: 'image/svg+xml' },
       { url: '/favicon-32.png', sizes: '32x32' },
     ],
-
+  },
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
   },
 };
 
